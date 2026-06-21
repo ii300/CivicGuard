@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>EmberGuard Alert Console</title>
+        <link rel="preconnect" href="https://unpkg.com" />
+        <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIINfQNFVQV9KWM0Jccm1Jr0rNYQyL9t+3s="
+            crossorigin=""
+        />
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <main class="app-shell">
+            <aside class="incident-panel" aria-label="Incident briefing">
+                <header class="brand-row">
+                    <div>
+                        <p class="eyebrow">CivicGuard / EmberGuard</p>
+                        <h1>Palisades Fire Alert Release</h1>
+                    </div>
+                    <span class="live-pill">Simulation</span>
+                </header>
+
+                <section class="status-card order">
+                    <div class="card-topline">
+                        <span>Evacuation Order Draft</span>
+                        <strong>HIGH</strong>
+                    </div>
+                    <p>
+                        Pacific Palisades and canyon-adjacent communities are
+                        queued for a public evacuation alert based on the
+                        January 2025 wildfire incident map.
+                    </p>
+                </section>
+
+                <section class="metric-grid" aria-label="Incident metrics">
+                    <div>
+                        <span>Fire</span>
+                        <strong>Palisades</strong>
+                    </div>
+                    <div>
+                        <span>Incident</span>
+                        <strong>Jan 2025</strong>
+                    </div>
+                    <div>
+                        <span>Road Closures</span>
+                        <strong id="closureCount">Loading</strong>
+                    </div>
+                    <div>
+                        <span>Source</span>
+                        <strong>LA County</strong>
+                    </div>
+                </section>
+
+                <section class="layer-card" aria-label="Map layers">
+                    <div class="section-heading">
+                        <h2>Map Layers</h2>
+                        <button id="fitAllButton" type="button">Fit map</button>
+                    </div>
+                    <label>
+                        <input type="checkbox" data-layer="perimeter" checked />
+                        Fire perimeter
+                    </label>
+                    <label>
+                        <input type="checkbox" data-layer="evacuation" checked />
+                        Evacuation order / warning
+                    </label>
+                    <label>
+                        <input type="checkbox" data-layer="closures" checked />
+                        Road closures
+                    </label>
+                    <label>
+                        <input type="checkbox" data-layer="care" checked />
+                        Mass care sites
+                    </label>
+                </section>
+
+                <section class="timeline-card" aria-label="Decision timeline">
+                    <h2>Release Sequence</h2>
+                    <ol>
+                        <li class="done">Fire perimeter loaded</li>
+                        <li class="done">Road closures checked</li>
+                        <li class="active">Alert copy under review</li>
+                        <li>Human approval required</li>
+                    </ol>
+                </section>
+            </aside>
+
+            <section class="map-stage" aria-label="Wildfire evacuation map">
+                <div id="map"></div>
+                <svg
+                    id="geoOverlay"
+                    class="geo-overlay"
+                    aria-hidden="true"
+                    focusable="false"
+                ></svg>
+                <div class="map-banner">
+                    <div>
+                        <span>Real incident layer</span>
+                        <strong>Palisades WUI planning perimeter + LA closures</strong>
+                    </div>
+                    <a
+                        href="https://experience.arcgis.com/experience/fedf0447f6c9485e804d1ac9b993632e/"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Official LA County map
+                    </a>
+                </div>
+                <div class="legend" aria-label="Map legend">
+                    <div><i class="swatch order"></i> Evacuation order</div>
+                    <div><i class="swatch warning"></i> Evacuation warning</div>
+                    <div><i class="swatch fire"></i> Fire perimeter</div>
+                    <div><i class="dot closure"></i> Road closure</div>
+                    <div><i class="dot care"></i> Mass care</div>
+                </div>
+            </section>
+
+            <aside class="release-panel" aria-label="Alert release controls">
+                <section class="release-header">
+                    <p class="eyebrow">Public Warning Composer</p>
+                    <h2>Wireless Emergency Alert</h2>
+                    <p id="lastUpdated">Loading source data...</p>
+                </section>
+
+                <section class="approval-stack">
+                    <div class="approval-card ok">
+                        <span>Perimeter source</span>
+                        <strong id="perimeterStatus">Loading</strong>
+                    </div>
+                    <div class="approval-card warn">
+                        <span>Road impact</span>
+                        <strong>Closures active</strong>
+                    </div>
+                    <div class="approval-card hold">
+                        <span>Release authority</span>
+                        <strong>Pending human approval</strong>
+                    </div>
+                </section>
+
+                <section class="message-card">
+                    <div class="section-heading">
+                        <h2>Alert Text</h2>
+                        <div class="tabs" role="tablist" aria-label="Language">
+                            <button class="tab active" data-lang="en" type="button">
+                                EN
+                            </button>
+                            <button class="tab" data-lang="es" type="button">
+                                ES
+                            </button>
+                            <button class="tab" data-lang="zh" type="button">
+                                中文
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="alertText" aria-label="Alert text"></textarea>
+                    <div class="message-meta">
+                        <span id="charCount">0 chars</span>
+                        <span>WEA ready after approval</span>
+                    </div>
+                </section>
+
+                <section class="channel-card">
+                    <h2>Channels</h2>
+                    <div class="channel-grid">
+                        <button class="channel active" type="button">WEA</button>
+                        <button class="channel active" type="button">EAS</button>
+                        <button class="channel active" type="button">SMS</button>
+                        <button class="channel" type="button">Social</button>
+                    </div>
+                </section>
+
+                <section class="actions">
+                    <button id="approveButton" class="primary-action" type="button">
+                        Approve Release
+                    </button>
+                    <button id="reviseButton" class="secondary-action" type="button">
+                        Revise Warning Area
+                    </button>
+                    <p id="releaseState" role="status">
+                        This is a mock interface. It does not send public alerts.
+                    </p>
+                </section>
+            </aside>
+        </main>
+
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""
+        ></script>
+        <script src="script.js"></script>
+    </body>
+</html>
