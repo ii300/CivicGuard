@@ -1,0 +1,119 @@
+- main [ref=e2]:
+  - complementary "Incident briefing" [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - paragraph [ref=e6]: CivicGuard / EmberGuard
+        - heading "Palisades Fire Alert Release" [level=1] [ref=e7]
+      - generic [ref=e8]: Simulation
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]: Evacuation Order Draft
+        - strong [ref=e12]: HIGH
+      - paragraph [ref=e13]: Pacific Palisades and canyon-adjacent communities are queued for a public evacuation alert based on the January 2025 wildfire incident map.
+    - region "Incident metrics" [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: Fire
+        - strong [ref=e17]: Palisades
+      - generic [ref=e18]:
+        - generic [ref=e19]: Incident
+        - strong [ref=e20]: Jan 2025
+      - generic [ref=e21]:
+        - generic [ref=e22]: Road Closures
+        - strong [ref=e23]: Loading
+      - generic [ref=e24]:
+        - generic [ref=e25]: Source
+        - strong [ref=e26]: LA County
+    - region "Map layers" [ref=e27]:
+      - generic [ref=e28]:
+        - heading "Map Layers" [level=2] [ref=e29]
+        - button "Fit map" [ref=e30] [cursor=pointer]
+      - generic [ref=e31]:
+        - checkbox "Fire perimeter" [checked] [ref=e32]
+        - text: Fire perimeter
+      - generic [ref=e33]:
+        - checkbox "Evacuation order / warning" [checked] [ref=e34]
+        - text: Evacuation order / warning
+      - generic [ref=e35]:
+        - checkbox "Road closures" [checked] [ref=e36]
+        - text: Road closures
+      - generic [ref=e37]:
+        - checkbox "Mass care sites" [checked] [ref=e38]
+        - text: Mass care sites
+    - region "Decision timeline" [ref=e39]:
+      - heading "Release Sequence" [level=2] [ref=e40]
+      - list [ref=e41]:
+        - listitem [ref=e42]: Fire perimeter loaded
+        - listitem [ref=e43]: Road closures checked
+        - listitem [ref=e44]: Alert copy under review
+        - listitem [ref=e45]: Human approval required
+  - region "Wildfire evacuation map" [ref=e46]:
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e52]:
+          - img
+        - generic [ref=e53]:
+          - button "ORDER" [ref=e54]:
+            - generic [ref=e55]: ORDER
+          - button "WARNING" [ref=e56]:
+            - generic [ref=e57]: WARNING
+          - button "WARNING" [ref=e58]:
+            - generic [ref=e59]: WARNING
+      - generic [ref=e60]:
+        - generic [ref=e62]:
+          - button "Zoom in" [ref=e63] [cursor=pointer]: +
+          - button "Zoom out" [ref=e64] [cursor=pointer]: −
+        - generic [ref=e66]:
+          - link "Leaflet" [ref=e67] [cursor=pointer]:
+            - /url: https://leafletjs.com
+            - img [ref=e68]
+            - text: Leaflet
+          - text: "| Tiles © Esri, HERE, Garmin, USGS, EPA, NPS | Data © OpenStreetMap contributors"
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - generic [ref=e74]: Real incident layer
+        - strong [ref=e75]: Palisades Fire perimeter + LA road closures
+      - link "Official LA County map" [ref=e76] [cursor=pointer]:
+        - /url: https://experience.arcgis.com/experience/fedf0447f6c9485e804d1ac9b993632e/
+    - generic "Map legend" [ref=e77]:
+      - generic [ref=e78]: Evacuation order
+      - generic [ref=e80]: Evacuation warning
+      - generic [ref=e82]: Fire perimeter
+      - generic [ref=e84]: Road closure
+      - generic [ref=e86]: Mass care
+  - complementary "Alert release controls" [ref=e88]:
+    - generic [ref=e89]:
+      - paragraph [ref=e90]: Public Warning Composer
+      - heading "Wireless Emergency Alert" [level=2] [ref=e91]
+      - paragraph [ref=e92]: Loading source data...
+    - generic [ref=e93]:
+      - generic [ref=e94]:
+        - generic [ref=e95]: Perimeter source
+        - strong [ref=e96]: Loading
+      - generic [ref=e97]:
+        - generic [ref=e98]: Road impact
+        - strong [ref=e99]: Closures active
+      - generic [ref=e100]:
+        - generic [ref=e101]: Release authority
+        - strong [ref=e102]: Pending human approval
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - heading "Alert Text" [level=2] [ref=e105]
+        - tablist "Language" [ref=e106]:
+          - button "EN" [ref=e107] [cursor=pointer]
+          - button "ES" [ref=e108] [cursor=pointer]
+          - button "中文" [ref=e109] [cursor=pointer]
+      - textbox "Alert text" [ref=e110]: "EVACUATION ORDER: Leave now for Pacific Palisades zones shown in red. Use Sunset Blvd eastbound or Pacific Coast Highway only if open. Avoid Topanga Canyon and posted closures. Take people, pets, medications, documents, and phones. Check county updates before returning."
+      - generic [ref=e111]:
+        - generic [ref=e112]: 270 chars
+        - generic [ref=e113]: WEA ready after approval
+    - generic [ref=e114]:
+      - heading "Channels" [level=2] [ref=e115]
+      - generic [ref=e116]:
+        - button "WEA" [ref=e117] [cursor=pointer]
+        - button "EAS" [ref=e118] [cursor=pointer]
+        - button "SMS" [ref=e119] [cursor=pointer]
+        - button "Social" [ref=e120] [cursor=pointer]
+    - generic [ref=e121]:
+      - button "Approve Release" [ref=e122] [cursor=pointer]
+      - button "Revise Warning Area" [ref=e123] [cursor=pointer]
+      - status [ref=e124]: This is a mock interface. It does not send public alerts.
