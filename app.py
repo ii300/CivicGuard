@@ -13,7 +13,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'al
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-client = Anthropic(api_key=os.getenv("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"))
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 
 class AlertRecord(db.Model):
