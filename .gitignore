@@ -1,1 +1,13 @@
 .env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+*.db
+node_modules/
+test-results/
+playwright-report/
+.playwright-cli/
+output/
+.DS_Store

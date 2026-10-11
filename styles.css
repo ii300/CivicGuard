@@ -263,7 +263,8 @@ h2 {
 .leaflet-container {
     position: relative;
     overflow: hidden;
-    font: 12px/1.5 var(--font);
+    font-size: 12px;
+    line-height: 1.5;
     outline-offset: 1px;
 }
 
@@ -388,61 +389,6 @@ h2 {
     background: rgba(255, 253, 248, 0.92);
     box-shadow: var(--shadow);
     backdrop-filter: blur(14px);
-}
-
-.geo-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 600;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.geo-zone {
-    stroke-width: 3px;
-    stroke-linejoin: round;
-}
-
-.geo-order {
-    fill: rgba(209, 74, 61, 0.48);
-    stroke: #b7352b;
-}
-
-.geo-warning {
-    fill: rgba(216, 170, 45, 0.4);
-    stroke: #a97912;
-    stroke-dasharray: 8 7;
-}
-
-.geo-fire {
-    fill: rgba(127, 47, 37, 0.24);
-    stroke: #7f2f25;
-    stroke-width: 4px;
-}
-
-.geo-pin {
-    stroke: #ffffff;
-    stroke-width: 3px;
-    filter: drop-shadow(0 4px 8px rgba(20, 24, 28, 0.32));
-}
-
-.geo-pin.closure {
-    fill: var(--closure);
-}
-
-.geo-pin.care {
-    fill: var(--care);
-}
-
-.geo-label {
-    fill: #1b1c1d;
-    paint-order: stroke;
-    stroke: rgba(255, 255, 255, 0.92);
-    stroke-width: 5px;
-    font-size: 24px;
-    font-weight: 950;
-    letter-spacing: 0.12em;
 }
 
 .map-banner {
@@ -687,14 +633,6 @@ h2 {
     z-index: 500;
 }
 
-.leaflet-evacuation-pane,
-.leaflet-perimeter-pane,
-.leaflet-closure-pane,
-.leaflet-care-pane,
-.leaflet-label-pane {
-    display: none;
-}
-
 .closure-marker,
 .care-marker {
     display: grid;
@@ -780,3 +718,28 @@ h2 {
         margin-top: 8px;
     }
 }
+
+.source-card {
+    margin-top: 20px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    background: #fff;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.source-card p, .source-card dd {
+    color: var(--muted);
+}
+
+.source-card dt { font-weight: 800; }
+.source-card dd { margin: 2px 0 12px; overflow-wrap: anywhere; }
+.source-card dd:last-child { margin-bottom: 0; }
+.source-card dl { margin-bottom: 0; }
+.map-banner small { display: block; margin-top: 5px; color: var(--muted); }
+.popup dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; }
+.popup dt { font-weight: 700; }
+.popup dd { margin: 0; overflow-wrap: anywhere; }
+button:disabled { cursor: default; opacity: 0.6; }
+button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }

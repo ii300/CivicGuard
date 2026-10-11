@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>EmberGuard Alert Console</title>
         <link rel="preconnect" href="https://unpkg.com" />
-        <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+        <link rel="preconnect" href="https://server.arcgisonline.com" />
         <link
             rel="stylesheet"
             href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -20,20 +20,20 @@
                 <header class="brand-row">
                     <div>
                         <p class="eyebrow">CivicGuard / EmberGuard</p>
-                        <h1>Palisades Fire Alert Release</h1>
+                        <h1>Palisades Fire Simulation</h1>
                     </div>
                     <span class="live-pill">Simulation</span>
                 </header>
 
                 <section class="status-card order">
                     <div class="card-topline">
-                        <span>Evacuation Order Draft</span>
+                        <span>Simulation Draft</span>
                         <strong>HIGH</strong>
                     </div>
                     <p>
-                        Pacific Palisades and canyon-adjacent communities are
-                        queued for a public evacuation alert based on the
-                        January 2025 wildfire incident map.
+                        Historical scenario inspired by the January 2025 Palisades
+                        fire. Evacuation zones are illustrative. This console
+                        does not verify current conditions or send alerts.
                     </p>
                 </section>
 
@@ -52,7 +52,7 @@
                     </div>
                     <div>
                         <span>Source</span>
-                        <strong>LA County</strong>
+                        <strong>Mixed / see below</strong>
                     </div>
                 </section>
 
@@ -67,7 +67,7 @@
                     </label>
                     <label>
                         <input type="checkbox" data-layer="evacuation" checked />
-                        Evacuation order / warning
+                        Simulated order / warning
                     </label>
                     <label>
                         <input type="checkbox" data-layer="closures" checked />
@@ -79,29 +79,35 @@
                     </label>
                 </section>
 
+                <section class="source-card" aria-label="Data sources">
+                    <h2>Source Status</h2>
+                    <p>Remote means a service responded, not that the data is current.
+                        Sample records are illustrative. Point counts cover this scenario area.</p>
+                    <dl>
+                        <dt>Fire perimeter</dt><dd id="perimeterSource">Loading…</dd>
+                        <dt>Road closures</dt><dd id="roadSource">Loading…</dd>
+                        <dt>Mass care</dt><dd id="careSource">Loading…</dd>
+                    </dl>
+                </section>
+
                 <section class="timeline-card" aria-label="Decision timeline">
-                    <h2>Release Sequence</h2>
+                    <h2>Simulation Review</h2>
                     <ol>
-                        <li class="done">Fire perimeter loaded</li>
-                        <li class="done">Road closures checked</li>
-                        <li class="active">Alert copy under review</li>
-                        <li>Human approval required</li>
+                        <li>Inspect source status</li>
+                        <li>Review illustrative zones</li>
+                        <li>Edit each language draft</li>
+                        <li>Approve the simulation</li>
                     </ol>
                 </section>
             </aside>
 
             <section class="map-stage" aria-label="Wildfire evacuation map">
                 <div id="map"></div>
-                <svg
-                    id="geoOverlay"
-                    class="geo-overlay"
-                    aria-hidden="true"
-                    focusable="false"
-                ></svg>
                 <div class="map-banner">
                     <div>
-                        <span>Real incident layer</span>
-                        <strong>Palisades WUI planning perimeter + LA closures</strong>
+                        <span>Historical scenario · illustrative zones</span>
+                        <strong>Palisades fire planning simulation</strong>
+                        <small id="basemapStatus" role="status">Loading basemap…</small>
                     </div>
                     <a
                         href="https://experience.arcgis.com/experience/fedf0447f6c9485e804d1ac9b993632e/"
@@ -112,8 +118,8 @@
                     </a>
                 </div>
                 <div class="legend" aria-label="Map legend">
-                    <div><i class="swatch order"></i> Evacuation order</div>
-                    <div><i class="swatch warning"></i> Evacuation warning</div>
+                    <div><i class="swatch order"></i> Simulated order</div>
+                    <div><i class="swatch warning"></i> Simulated warning</div>
                     <div><i class="swatch fire"></i> Fire perimeter</div>
                     <div><i class="dot closure"></i> Road closure</div>
                     <div><i class="dot care"></i> Mass care</div>
@@ -122,23 +128,23 @@
 
             <aside class="release-panel" aria-label="Alert release controls">
                 <section class="release-header">
-                    <p class="eyebrow">Public Warning Composer</p>
-                    <h2>Wireless Emergency Alert</h2>
+                    <p class="eyebrow">Simulation Composer</p>
+                    <h2>Emergency Alert Draft</h2>
                     <p id="lastUpdated">Loading source data...</p>
                 </section>
 
                 <section class="approval-stack">
-                    <div class="approval-card ok">
+                    <div class="approval-card hold">
                         <span>Perimeter source</span>
                         <strong id="perimeterStatus">Loading</strong>
                     </div>
                     <div class="approval-card warn">
                         <span>Road impact</span>
-                        <strong>Closures active</strong>
+                        <strong id="roadStatus">Loading</strong>
                     </div>
                     <div class="approval-card hold">
-                        <span>Release authority</span>
-                        <strong>Pending human approval</strong>
+                        <span>Simulation review</span>
+                        <strong id="approvalStatus">Pending simulation review</strong>
                     </div>
                 </section>
 
@@ -146,40 +152,42 @@
                     <div class="section-heading">
                         <h2>Alert Text</h2>
                         <div class="tabs" role="tablist" aria-label="Language">
-                            <button class="tab active" data-lang="en" type="button">
+                            <button id="tab-en" class="tab active" data-lang="en" type="button" role="tab" aria-selected="true" aria-controls="messagePanel">
                                 EN
                             </button>
-                            <button class="tab" data-lang="es" type="button">
+                            <button id="tab-es" class="tab" data-lang="es" type="button" role="tab" aria-selected="false" aria-controls="messagePanel" tabindex="-1">
                                 ES
                             </button>
-                            <button class="tab" data-lang="zh" type="button">
+                            <button id="tab-zh" class="tab" data-lang="zh" type="button" role="tab" aria-selected="false" aria-controls="messagePanel" tabindex="-1">
                                 中文
                             </button>
                         </div>
                     </div>
-                    <textarea id="alertText" aria-label="Alert text"></textarea>
+                    <div id="messagePanel" role="tabpanel" aria-labelledby="tab-en">
+                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount" lang="en"></textarea>
+                    </div>
                     <div class="message-meta">
                         <span id="charCount">0 chars</span>
-                        <span>WEA ready after approval</span>
+                        <span>Simulation draft only</span>
                     </div>
                 </section>
 
                 <section class="channel-card">
-                    <h2>Channels</h2>
+                    <h2>Simulated Channels</h2>
                     <div class="channel-grid">
-                        <button class="channel active" type="button">WEA</button>
-                        <button class="channel active" type="button">EAS</button>
-                        <button class="channel active" type="button">SMS</button>
-                        <button class="channel" type="button">Social</button>
+                        <button class="channel active" type="button" aria-pressed="true">WEA</button>
+                        <button class="channel active" type="button" aria-pressed="true">EAS</button>
+                        <button class="channel active" type="button" aria-pressed="true">SMS</button>
+                        <button class="channel" type="button" aria-pressed="false">Social</button>
                     </div>
                 </section>
 
                 <section class="actions">
                     <button id="approveButton" class="primary-action" type="button">
-                        Approve Release
+                        Approve Simulation
                     </button>
                     <button id="reviseButton" class="secondary-action" type="button">
-                        Revise Warning Area
+                        Review Alert Text
                     </button>
                     <p id="releaseState" role="status">
                         This is a mock interface. It does not send public alerts.
@@ -188,6 +196,8 @@
             </aside>
         </main>
 
+        <noscript>This simulation requires JavaScript for its map and message composer.</noscript>
+        <script src="console-core.js"></script>
         <script
             src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
