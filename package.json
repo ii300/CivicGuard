@@ -4,10 +4,35 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "build:web": "node scripts/build-web.cjs",
+    "preview:web": "node scripts/serve-web.cjs",
+    "desktop:dev": "npm run build:web && electron .",
+    "desktop:pack": "npm run build:web && electron-builder --config electron-builder.config.cjs --dir",
+    "desktop:win": "npm run build:web && electron-builder --config electron-builder.config.cjs --win --publish never",
+    "desktop:mac": "npm run build:web && electron-builder --config electron-builder.config.cjs --mac --publish never",
+    "mobile:sync": "npm run build:web && cap sync",
+    "mobile:android": "npm run mobile:sync && cap open android",
+    "mobile:ios": "npm run mobile:sync && cap open ios",
+    "test:desktop": "npm run build:web && node desktop/smoke.cjs",
+    "test:packaged": "playwright test --config playwright.packaged.config.cjs"
   },
   "devDependencies": {
     "@playwright/test": "1.58.2",
-    "leaflet": "1.9.4"
+    "leaflet": "1.9.4",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/ios": "8.5.3",
+    "@capacitor/cli": "8.5.3",
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3"
+  },
+  "description": "Wildfire alert planning simulation for desktop and mobile",
+  "main": "desktop/main.cjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@capacitor/core": "8.5.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

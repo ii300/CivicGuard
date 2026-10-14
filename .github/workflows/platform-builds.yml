@@ -1,0 +1,159 @@
+name: Platform builds
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-builds-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: Desktop (${{ matrix.platform }}-${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            platform: win
+            arch: x64
+            executable: release/desktop/win-unpacked/CivicGuard.exe
+          - runner: macos-15
+            platform: mac
+            arch: arm64
+            executable: release/desktop/mac-arm64/CivicGuard.app/Contents/MacOS/CivicGuard
+          - runner: macos-15-intel
+            platform: mac
+            arch: x64
+            executable: release/desktop/mac/CivicGuard.app/Contents/MacOS/CivicGuard
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Smoke test desktop shell
+        run: npm run test:desktop
+      - name: Build unsigned desktop packages
+        run: npm run desktop:${{ matrix.platform }} -- --${{ matrix.arch }}
+      - name: Smoke test packaged application
+        env:
+          CIVICGUARD_EXECUTABLE_PATH: ${{ github.workspace }}/${{ matrix.executable }}
+        run: node desktop/smoke.cjs
+      - name: Upload desktop packages
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: civicguard-${{ matrix.platform }}-${{ matrix.arch }}-unsigned
+          path: |
+            release/desktop/*.exe
+            release/desktop/*.dmg
+            release/desktop/*.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  android:
+    name: Android debug APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4.7.1
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Ensure Android SDK packages
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - run: npm ci
+      - run: npm run build:web
+      - run: npx cap sync android
+      - name: Compile debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: civicguard-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  ios:
+    name: iOS simulator and unsigned device archive
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      # The runner's default Xcode is older than Capacitor 8's requirement.
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify Xcode selection
+        run: xcodebuild -version
+      - run: npm ci
+      - run: npm run build:web
+      - run: npx cap sync ios
+      - name: Build Apple Silicon simulator app
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath dist/ios-simulator \
+            ARCHS=arm64 CODE_SIGNING_ALLOWED=NO build
+          mkdir -p release/ios
+          ditto -c -k --sequesterRsrc --keepParent \
+            dist/ios-simulator/Build/Products/Release-iphonesimulator/App.app \
+            release/ios/CivicGuard-ios-simulator-arm64.zip
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: civicguard-ios-simulator-arm64
+          path: release/ios/CivicGuard-ios-simulator-arm64.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+      - name: Compile unsigned device archive
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App \
+            -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath dist/ios-device/CivicGuard.xcarchive \
+            CODE_SIGNING_ALLOWED=NO archive
+          ditto -c -k --sequesterRsrc --keepParent \
+            dist/ios-device/CivicGuard.xcarchive \
+            release/ios/CivicGuard-ios-device-unsigned.xcarchive.zip
+      - name: Upload unsigned archive (not an installable IPA)
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: civicguard-ios-device-unsigned-archive
+          path: release/ios/CivicGuard-ios-device-unsigned.xcarchive.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

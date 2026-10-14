@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <title>EmberGuard Alert Console</title>
         <link rel="preconnect" href="https://unpkg.com" />
         <link rel="preconnect" href="https://server.arcgisonline.com" />
@@ -16,7 +16,7 @@
     </head>
     <body>
         <main class="app-shell">
-            <aside class="incident-panel" aria-label="Incident briefing">
+            <aside id="incidentPanel" class="incident-panel" aria-label="Incident briefing">
                 <header class="brand-row">
                     <div>
                         <p class="eyebrow">CivicGuard / EmberGuard</p>
@@ -101,7 +101,7 @@
                 </section>
             </aside>
 
-            <section class="map-stage" aria-label="Wildfire evacuation map">
+            <section id="mapStage" class="map-stage" aria-label="Wildfire evacuation map">
                 <div id="map"></div>
                 <div class="map-banner">
                     <div>
@@ -126,7 +126,7 @@
                 </div>
             </section>
 
-            <aside class="release-panel" aria-label="Alert release controls">
+            <aside id="releasePanel" class="release-panel" aria-label="Alert release controls">
                 <section class="release-header">
                     <p class="eyebrow">Simulation Composer</p>
                     <h2>Emergency Alert Draft</h2>
@@ -195,6 +195,12 @@
                 </section>
             </aside>
         </main>
+
+        <nav class="mobile-navigation" aria-label="Console sections">
+            <a href="#incidentPanel">Briefing</a>
+            <a href="#mapStage">Map</a>
+            <a href="#releasePanel">Draft</a>
+        </nav>
 
         <noscript>This simulation requires JavaScript for its map and message composer.</noscript>
         <script src="console-core.js"></script>

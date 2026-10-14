@@ -5,6 +5,28 @@ It combines a map, editable English/Spanish/Chinese drafts, and simulated channe
 selection and approval. It does not send public alerts or verify current emergency
 conditions. Language drafts are independent, kept in memory, and reset on reload.
 
+## Desktop and mobile apps
+
+The same console now has Electron wrappers for **Windows and macOS** and Capacitor
+projects for **iOS and Android**. App bundles include the UI and Leaflet; they do
+not need Python, an API key, or a running web server. Online basemaps and remote
+incident data still require connectivity; offline mode uses labeled examples.
+
+```sh
+npm ci
+npm run desktop:dev
+```
+
+Use `npm run desktop:win -- --x64` or `npm run desktop:mac -- --arm64` on the
+corresponding OS to package a desktop build. Use `npm run mobile:android` or
+`npm run mobile:ios` to sync bundled assets and open the native IDE.
+
+See [the platform build and installation guide](docs/PLATFORMS.md) for SDK setup,
+downloadable CI artifacts, Intel Mac builds, and signing. Android CI outputs a
+debug APK; iOS CI outputs a simulator app and an unsigned device archive. The iOS
+archive needs your development team and provisioning before it can run on an iPhone.
+Desktop CI packages are unsigned development builds, not notarized/store releases.
+
 ## Run locally
 
 Use Python 3.11 or newer:
@@ -33,7 +55,8 @@ The development server binds to localhost with debug mode off.
 - Failed, timed-out, malformed, or explicitly truncated responses use labeled
   **Sample** data. Requests time out after 10 seconds. Samples are illustrations,
   not an archived or current incident feed.
-- Leaflet and the Esri basemap require internet access during normal use. A failed
+- The Flask-hosted page loads Leaflet from a CDN; packaged apps include it locally.
+  The Esri basemap requires internet access. A failed
   basemap is reported separately. If Leaflet cannot load, the composer still works.
 - Click a zone or marker for source details. Layer checkboxes control the displayed
   data. Each draft or channel change clears the simulated approval.
@@ -73,18 +96,25 @@ With the virtual environment active, run the offline backend tests:
 python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-Use Node.js 22 or newer for frontend tests:
+Use Node.js 22.12 or newer for frontend tests:
 
 ```sh
 npm ci
 npm test
 npx playwright install chromium
 npm run test:browser
+npx playwright install webkit
+npm run test:packaged
+npm run test:desktop
 ```
 
 Browser tests start Flask on port 5055, supply Leaflet from the pinned test
 dependency, and mock external map services. Tests do not call Anthropic or send
 alerts. GitHub Actions runs the backend, frontend unit, and Chromium tests.
+The packaged Web tests also exercise touch navigation and safe-area spacing in
+Chromium and WebKit. These are browser checks, not substitutes for testing actual
+iOS and Android devices. Platform builds compile both native projects and package
+the Windows/macOS applications separately.
 
 ## Next improvements
 
