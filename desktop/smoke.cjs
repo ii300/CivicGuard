@@ -29,13 +29,33 @@ async function main() {
         await expect(page.locator("#roadSource")).toContainText("Sample");
         await expect(page.locator("#careSource")).toContainText("Sample");
         await expect(page.locator("#map .leaflet-control-zoom")).toBeVisible();
-        const draft = "Desktop offline draft — preserved across language switches";
-        await page.locator("#alertText").fill(draft);
-        await page.locator('[data-lang="zh"]').click();
-        await page.locator('[data-lang="en"]').click();
-        await expect(page.locator("#alertText")).toHaveValue(draft);
-        await page.locator("#approveButton").click();
-        await expect(page.locator("#releaseState")).toContainText("No public alerts have been sent");
+        // Exercise the compact desktop layout as well as the wider console.
+        // Map panes must not cover the composer when it overlays the map.
+        for (const width of [1280, 1024, 800]) {
+            await electronApp.evaluate(({ BrowserWindow }, contentWidth) => {
+                BrowserWindow.getAllWindows()[0].setContentSize(contentWidth, 768);
+            }, width);
+            await expect.poll(() => page.locator("#releasePanel").evaluate((panel) => {
+                const rect = panel.getBoundingClientRect();
+                const covered = [];
+                for (const xRatio of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+                    for (const yRatio of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+                        const x = rect.left + rect.width * xRatio;
+                        const y = rect.top + rect.height * yRatio;
+                        if (x < 0 || x >= innerWidth || y < 0 || y >= innerHeight) continue;
+                        if (!panel.contains(document.elementFromPoint(x, y))) covered.push([xRatio, yRatio]);
+                    }
+                }
+                return covered;
+            })).toEqual([]);
+            const draft = `Desktop ${width}px draft — preserved across language switches`;
+            await page.locator("#alertText").fill(draft);
+            await page.locator('[data-lang="zh"]').click();
+            await page.locator('[data-lang="en"]').click();
+            await expect(page.locator("#alertText")).toHaveValue(draft);
+            await page.locator("#approveButton").click();
+            await expect(page.locator("#releaseState")).toContainText("No public alerts have been sent");
+        }
         assert.deepEqual(await page.evaluate(() => ({ node: typeof require, process: typeof process })), { node: "undefined", process: "undefined" });
         const preferences = await electronApp.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences());
         assert.equal(preferences.sandbox, true);
@@ -54,6 +74,12 @@ async function main() {
         const screenshot = executablePath ? "desktop-packaged-smoke.png" : "desktop-smoke.png";
         await page.screenshot({ path: path.join(__dirname, "..", "output", screenshot), fullPage: true });
         console.log("Desktop smoke passed: offline console, map layers, drafts, approvals and security boundaries.");
+    } catch (error) {
+        const page = electronApp.windows()[0];
+        if (page && !page.isClosed()) {
+            await page.screenshot({ path: path.join(__dirname, "..", "output", "desktop-smoke-failure.png"), fullPage: true }).catch(() => {});
+        }
+        throw error;
     } finally {
         await electronApp.close();
     }

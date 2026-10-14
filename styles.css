@@ -250,6 +250,7 @@ h2 {
 
 .map-stage {
     position: relative;
+    isolation: isolate;
     min-width: 0;
     background: #dfe3dc;
 }
