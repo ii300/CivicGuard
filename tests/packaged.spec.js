@@ -18,10 +18,16 @@ test('packaged mobile UI works offline with local map assets and reachable touch
     await expect(page.locator('#map .leaflet-control-zoom')).toBeAttached();
     expect(dependencies.every((url) => url.startsWith('http://127.0.0.1:5056/'))).toBeTruthy();
 
-    // Exercise Capacitor's fallback safe-area properties in both browser engines.
-    await page.addStyleTag({ content: ':root { --safe-area-inset-top: 44px; --safe-area-inset-bottom: 34px; }' });
+    // Match Capacitor's custom properties without waiting for an inline style load event.
+    await page.evaluate(() => {
+        document.documentElement.style.setProperty('--safe-area-inset-top', '44px');
+        document.documentElement.style.setProperty('--safe-area-inset-bottom', '34px');
+    });
     const navigation = page.getByRole('navigation', { name: 'Console sections' });
     await expect(navigation).toBeVisible();
+    await expect(page.locator('body')).toHaveCSS('padding-top', '44px');
+    await expect(page.locator('body')).toHaveCSS('padding-bottom', '102px');
+    await expect(navigation).toHaveCSS('padding-bottom', '40px');
     await navigation.getByRole('link', { name: 'Draft', exact: true }).tap();
     const editor = page.getByRole('textbox', { name: 'Alert text', exact: true });
     await editor.fill('Mobile offline simulation draft.');
