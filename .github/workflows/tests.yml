@@ -24,5 +24,6 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_*.py' -v
       - run: npm ci
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:browser
+      - run: npm run test:packaged

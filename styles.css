@@ -250,6 +250,7 @@ h2 {
 
 .map-stage {
     position: relative;
+    isolation: isolate;
     min-width: 0;
     background: #dfe3dc;
 }
@@ -743,3 +744,52 @@ h2 {
 .popup dd { margin: 0; overflow-wrap: anywhere; }
 button:disabled { cursor: default; opacity: 0.6; }
 button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+/* Capacitor supplies fallbacks for WebViews without native safe-area env values. */
+:root {
+    --app-inset-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+    --app-inset-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+    --app-inset-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+    --app-inset-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+}
+
+body {
+    padding: var(--app-inset-top) var(--app-inset-right) var(--app-inset-bottom) var(--app-inset-left);
+}
+
+.app-shell {
+    height: calc(100dvh - var(--app-inset-top) - var(--app-inset-bottom));
+}
+
+.mobile-navigation { display: none; }
+
+@media (max-width: 760px) {
+    body { padding-bottom: calc(68px + var(--app-inset-bottom)); }
+    .app-shell { height: auto; min-height: 0; }
+    #incidentPanel, #mapStage, #releasePanel { scroll-margin-top: calc(12px + var(--app-inset-top)); }
+    .mobile-navigation {
+        position: fixed;
+        inset: auto 0 0;
+        z-index: 1100;
+        display: flex;
+        padding: 6px max(12px, var(--app-inset-right)) calc(6px + var(--app-inset-bottom)) max(12px, var(--app-inset-left));
+        border-top: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: 0 -3px 16px rgba(20, 24, 28, 0.1);
+    }
+    .mobile-navigation a {
+        flex: 1;
+        min-height: 48px;
+        display: grid;
+        place-items: center;
+        color: var(--blue);
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        border-radius: 6px;
+    }
+    .mobile-navigation a:focus-visible { outline: 3px solid var(--blue); }
+    .layer-card label { min-height: 44px; }
+    .tabs button { min-width: 44px; min-height: 44px; }
+    .channel { min-height: 44px; }
+}
