@@ -2,7 +2,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
-const sourceFiles = ['index.html', 'styles.css', 'console-core.js', 'script.js'];
+const sourceFiles = ['index.html', 'styles.css', 'console-core.js', 'draft-store.js', 'platform-storage.js', 'script.js'];
 const contentSecurityPolicy = [
     "default-src 'self'",
     "script-src 'self'",
@@ -26,9 +26,18 @@ async function buildWeb(output = path.join(root, 'dist', 'web')) {
     html = html.replace(/\s*<link rel="preconnect" href="https:\/\/unpkg.com"\s*\/>/, '');
     html = html.replace(/<link\s+rel="stylesheet"\s+href="https:\/\/unpkg.com\/leaflet@1\.9\.4\/dist\/leaflet\.css"[\s\S]*?\/>/, '<link rel="stylesheet" href="vendor/leaflet/leaflet.css" />');
     html = html.replace(/<script\s+src="https:\/\/unpkg.com\/leaflet@1\.9\.4\/dist\/leaflet\.js"[\s\S]*?<\/script>/, '<script src="vendor/leaflet/leaflet.js"></script>');
+    // The native bridge alone does not expose registerPlugin. Ship Capacitor's
+    // official browser runtime so our plain scripts can register Preferences.
+    const storageScript = '<script src="platform-storage.js"></script>';
+    if (!html.includes(storageScript)) throw new Error('The platform storage script is missing from the app page.');
+    html = html.replace(storageScript, `<script src="vendor/capacitor/capacitor.js"></script>\n        ${storageScript}`);
     if (html.includes('unpkg.com')) throw new Error('A CDN dependency remains in the packaged app.');
     html = html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n        <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy}" />`);
     await fs.writeFile(path.join(output, 'index.html'), html);
+    const capacitorRoot = path.dirname(require.resolve('@capacitor/core/package.json'));
+    await fs.mkdir(path.join(output, 'vendor', 'capacitor'), { recursive: true });
+    await fs.copyFile(path.join(capacitorRoot, 'dist', 'capacitor.js'), path.join(output, 'vendor', 'capacitor', 'capacitor.js'));
+    await fs.copyFile(path.join(capacitorRoot, 'LICENSE'), path.join(output, 'vendor', 'capacitor', 'LICENSE'));
     const leafletRoot = path.dirname(require.resolve('leaflet/package.json'));
     await fs.cp(path.join(leafletRoot, 'dist'), path.join(output, 'vendor', 'leaflet'), { recursive: true });
     // Source maps are for development only and are not needed by the shipped UI.

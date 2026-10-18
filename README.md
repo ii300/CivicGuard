@@ -3,7 +3,8 @@
 A local wildfire alert **simulation** inspired by the January 2025 Palisades fire.
 It combines a map, editable English/Spanish/Chinese drafts, and simulated channel
 selection and approval. It does not send public alerts or verify current emergency
-conditions. Language drafts are independent, kept in memory, and reset on reload.
+conditions. Language drafts are independent and save on this device along with
+the selected language and simulated channels. Approval resets when the app reloads.
 
 ## Desktop and mobile apps
 
@@ -42,6 +43,26 @@ Open <http://127.0.0.1:5000>. The UI works without an API key. Flask serves only
 explicit UI assets; it does not expose `.env`, the database, or repository files.
 The SQLite database is created locally on first app startup and is ignored by Git.
 The development server binds to localhost with debug mode off.
+
+## Saved drafts
+
+Edits save automatically on this device. Reopening the same app or browser profile
+restores all three language drafts, the active language, and channel choices.
+The save status beneath the editor confirms successful writes or explains when
+storage is unavailable. Wait for **Saved on this device** before closing or
+reloading; an unfinished write may not survive an immediate close. Editing
+continues if saving fails. Restored drafts always
+require a fresh simulation review; approval is never stored.
+
+**Reset drafts** asks for confirmation before clearing the saved copy and restoring
+the original scenario. Canceling keeps every edit. Invalid or incompatible saved
+data is reported and left untouched until you edit or confirm a reset.
+
+Native iOS/Android apps use Capacitor Preferences; desktop/browser copies use
+localStorage. Drafts are not synced between devices or app/browser installations.
+Uninstalling the app or clearing its data can remove them. This is one current
+draft per language, not an edit history or encrypted backup. Each language draft
+is limited to 20,000 UTF-16 code units, with a 200 KiB limit on the saved record.
 
 ## Map and source behavior
 
@@ -120,7 +141,7 @@ the Windows/macOS applications separately.
 
 1. Add timestamped, versioned source snapshots, update metadata, and explicit retry
    controls so historical and current data can be evaluated reproducibly.
-2. Persist drafts and review versions, and expose a keyboard-accessible list of
+2. Add draft history and review versions, and expose a keyboard-accessible list of
    map records outside popups. Add language review and channel-specific validation.
 3. Before any real deployment, define authorized roles, approval/audit requirements,
    rate limits, and a separately validated alert delivery integration.

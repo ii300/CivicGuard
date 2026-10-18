@@ -164,11 +164,20 @@
                         </div>
                     </div>
                     <div id="messagePanel" role="tabpanel" aria-labelledby="tab-en">
-                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount" lang="en"></textarea>
+                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount draftSaveStatus" maxlength="20000" lang="en"></textarea>
                     </div>
                     <div class="message-meta">
                         <span id="charCount">0 chars</span>
                         <span>Simulation draft only</span>
+                    </div>
+                    <div class="draft-storage">
+                        <p id="draftSaveStatus" role="status" data-state="loading">Loading saved drafts…</p>
+                        <button id="resetDraftsButton" type="button" aria-controls="resetDraftsConfirm" aria-expanded="false">Reset drafts</button>
+                    </div>
+                    <div id="resetDraftsConfirm" class="draft-reset-confirm" role="group" aria-labelledby="resetDraftsPrompt" hidden>
+                        <p id="resetDraftsPrompt">Replace all three language drafts and channel choices with the original scenario? This clears your saved edits on this device.</p>
+                        <button id="cancelResetDraftsButton" type="button">Keep my drafts</button>
+                        <button id="confirmResetDraftsButton" type="button">Reset all drafts</button>
                     </div>
                 </section>
 
@@ -204,6 +213,8 @@
 
         <noscript>This simulation requires JavaScript for its map and message composer.</noscript>
         <script src="console-core.js"></script>
+        <script src="draft-store.js"></script>
+        <script src="platform-storage.js"></script>
         <script
             src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="

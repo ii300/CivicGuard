@@ -227,3 +227,75 @@ test("the narrow layout remains within the viewport and the composer is usable",
     await page.locator("#approveButton").click();
     await expect(page.locator("#approvalStatus")).toHaveText("Approved in simulation");
 });
+
+test("corrupt saved drafts are reported without overwriting them before a new edit", async ({ page }) => {
+    await page.addInitScript(() => {
+        if (localStorage.getItem('civicguard.palisades-drafts.v1') === null) {
+            localStorage.setItem('civicguard.palisades-drafts.v1', '{broken draft');
+        }
+    });
+    await openConsole(page);
+    await expect(page.locator('#draftSaveStatus')).toContainText('Saved drafts could not be read');
+    await page.getByRole('tab', { name: 'ES', exact: true }).click();
+    await page.getByRole('tab', { name: 'EN', exact: true }).click();
+    await expect(page.locator('#draftSaveStatus')).toContainText('Saved drafts could not be read');
+    expect(await page.evaluate(() => localStorage.getItem('civicguard.palisades-drafts.v1'))).toBe('{broken draft');
+    await page.locator('#alertText').fill('A replacement draft after recovery.');
+    await expect(page.locator('#draftSaveStatus')).toHaveText('Saved on this device.');
+    await page.reload();
+    await expect(page.locator('#alertText')).toHaveValue('A replacement draft after recovery.');
+    await expect(page.locator('#approvalStatus')).toHaveText('Pending simulation review');
+});
+
+test("storage failures keep the composer usable and saving recovers on a later edit", async ({ page }) => {
+    await page.addInitScript(() => {
+        const originalGet = Storage.prototype.getItem;
+        const originalSet = Storage.prototype.setItem;
+        Storage.prototype.getItem = () => { throw new DOMException('Blocked', 'SecurityError'); };
+        Storage.prototype.setItem = () => { throw new DOMException('Full', 'QuotaExceededError'); };
+        window.restoreStorageForTest = () => {
+            Storage.prototype.getItem = originalGet;
+            Storage.prototype.setItem = originalSet;
+        };
+    });
+    await openConsole(page);
+    await expect(page.locator('#draftSaveStatus')).toContainText('Autosave is unavailable');
+    await page.locator('#alertText').fill('Still editable while storage is blocked.');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Could not save on this device');
+    await page.locator('#approveButton').click();
+    await expect(page.locator('#approvalStatus')).toHaveText('Approved in simulation');
+    await page.evaluate(() => window.restoreStorageForTest());
+    await page.locator('#alertText').fill('Storage is available again.');
+    await expect(page.locator('#draftSaveStatus')).toHaveText('Saved on this device.');
+    await expect(page.locator('#approvalStatus')).toHaveText('Pending simulation review');
+});
+
+test("a failed saved-draft reset preserves the current edits", async ({ page }) => {
+    await openConsole(page);
+    await page.locator('#alertText').fill('Keep this draft if clearing storage fails.');
+    await expect(page.locator('#draftSaveStatus')).toHaveText('Saved on this device.');
+    await page.evaluate(() => {
+        Storage.prototype.removeItem = () => { throw new DOMException('Blocked', 'SecurityError'); };
+    });
+    await page.locator('#resetDraftsButton').click();
+    await page.locator('#confirmResetDraftsButton').click();
+    await expect(page.locator('#draftSaveStatus')).toContainText('Could not clear saved drafts');
+    await expect(page.locator('#alertText')).toHaveValue('Keep this draft if clearing storage fails.');
+    await expect(page.locator('#alertText')).toBeEnabled();
+    await expect(page.locator('#resetDraftsConfirm')).toBeHidden();
+    await expect(page.locator('#resetDraftsButton')).toBeFocused();
+});
+
+test("intentionally blank saved drafts and no channels stay blank after restoration", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('civicguard.palisades-drafts.v1', JSON.stringify({
+        version: 1, scenario: 'palisades-2025',
+        drafts: { en: '', es: '', zh: '' }, language: 'es', channels: [],
+    })));
+    await mockNetwork(page);
+    await page.goto('/');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Drafts restored');
+    await expect(page.locator('#alertText')).toHaveValue('');
+    await expect(page.getByRole('tab', { name: 'ES', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.channel[aria-pressed="true"]')).toHaveCount(0);
+    await expect(page.locator('#approveButton')).toBeDisabled();
+});
