@@ -131,6 +131,11 @@
                 await environment.navigator.share({ title: TITLE, text });
                 return { status: "shared" };
             }
+            // The desktop app intentionally cancels downloads at the session
+            // boundary. Do not report a file saved when that policy will block it.
+            if (/\bElectron\//i.test(environment.navigator?.userAgent || "")) {
+                return { status: "unavailable" };
+            }
             return downloadSummary(text, environment);
         } catch (error) {
             return { status: wasCancelled(error) ? "cancelled" : "unavailable" };

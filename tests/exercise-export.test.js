@@ -169,7 +169,29 @@ test("web cancellation does not trigger a download and other Web Share errors re
     assert.deepEqual(await shareSummary({ text, environment: makeEnvironment(new DOMException("Blocked by policy", "NotAllowedError")) }), { status: "unavailable" });
 });
 
-test("desktop/browser fallback downloads a plain text file and releases its URL after a bounded delay", async () => {
+test("Electron's blocked download fallback reports unavailable without pretending to save a file", async () => {
+    const environment = {
+        navigator: { userAgent: "Mozilla/5.0 Chrome/150.0.0.0 Electron/44.7.0 Safari/537.36" },
+        get document() { throw new Error("Electron must not attempt a blocked download"); },
+    };
+    assert.deepEqual(await shareSummary({ text: createSummary(state()), environment }), { status: "unavailable" });
+});
+
+test("a supported Web Share remains usable in Electron without reaching the blocked download path", async () => {
+    const calls = [];
+    const environment = {
+        navigator: {
+            userAgent: "Mozilla/5.0 Electron/44.7.0",
+            async share(options) { calls.push(options); },
+        },
+        get document() { throw new Error("No download should happen after Web Share"); },
+    };
+    const text = createSummary(state());
+    assert.deepEqual(await shareSummary({ text, environment }), { status: "shared" });
+    assert.deepEqual(calls, [{ title: "CivicGuard exercise summary", text }]);
+});
+
+test("browser fallback downloads a plain text file and releases its URL after a bounded delay", async () => {
     const text = createSummary(state());
     const download = downloadEnvironment();
     assert.deepEqual(await shareSummary({ text, environment: download.environment }), { status: "downloaded" });

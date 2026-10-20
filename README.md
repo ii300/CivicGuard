@@ -45,8 +45,10 @@ does not guarantee App Review approval; real-device acceptance is still required
 
 Sharing always includes **SIMULATION ONLY — NOT AN OFFICIAL ALERT**, all three
 drafts, channel choices, and the current language's session review status. iOS and
-Android open the system share sheet; browser/desktop copies use Web Share where
-available or download a text file. Selecting a recipient transfers the text to
+Android open the system share sheet; browsers use Web Share where available or
+download a text file. The Electron shell keeps downloads disabled and reports
+sharing unavailable, so important desktop text must be copied manually.
+Selecting a recipient transfers the text to
 that recipient or app. Exported copies are not deleted by resetting local drafts.
 
 ## Run locally
