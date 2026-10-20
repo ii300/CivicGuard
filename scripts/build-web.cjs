@@ -2,13 +2,13 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
-const sourceFiles = ['index.html', 'styles.css', 'console-core.js', 'draft-store.js', 'platform-storage.js', 'script.js'];
+const sourceFiles = ['index.html', 'styles.css', 'console-core.js', 'draft-store.js', 'platform-storage.js', 'exercise-export.js', 'app-info.js', 'script.js'];
 const contentSecurityPolicy = [
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https://server.arcgisonline.com",
-    "connect-src 'self' https://services.arcgis.com https://services5.arcgis.com https://services7.arcgis.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
     "font-src 'self'",
     "object-src 'none'",
     "base-uri 'none'",
@@ -24,6 +24,7 @@ async function buildWeb(output = path.join(root, 'dist', 'web')) {
     }
     let html = await fs.readFile(path.join(output, 'index.html'), 'utf8');
     html = html.replace(/\s*<link rel="preconnect" href="https:\/\/unpkg.com"\s*\/>/, '');
+    html = html.replace(/\s*<link rel="preconnect" href="https:\/\/server.arcgisonline.com"\s*\/>/, '');
     html = html.replace(/<link\s+rel="stylesheet"\s+href="https:\/\/unpkg.com\/leaflet@1\.9\.4\/dist\/leaflet\.css"[\s\S]*?\/>/, '<link rel="stylesheet" href="vendor/leaflet/leaflet.css" />');
     html = html.replace(/<script\s+src="https:\/\/unpkg.com\/leaflet@1\.9\.4\/dist\/leaflet\.js"[\s\S]*?<\/script>/, '<script src="vendor/leaflet/leaflet.js"></script>');
     // The native bridge alone does not expose registerPlugin. Ship Capacitor's
@@ -32,7 +33,7 @@ async function buildWeb(output = path.join(root, 'dist', 'web')) {
     if (!html.includes(storageScript)) throw new Error('The platform storage script is missing from the app page.');
     html = html.replace(storageScript, `<script src="vendor/capacitor/capacitor.js"></script>\n        ${storageScript}`);
     if (html.includes('unpkg.com')) throw new Error('A CDN dependency remains in the packaged app.');
-    html = html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n        <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy}" />`);
+    html = html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n        <meta name="civicguard-distribution" content="packaged" />\n        <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy}" />`);
     await fs.writeFile(path.join(output, 'index.html'), html);
     const capacitorRoot = path.dirname(require.resolve('@capacitor/core/package.json'));
     await fs.mkdir(path.join(output, 'vendor', 'capacitor'), { recursive: true });

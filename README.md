@@ -10,8 +10,9 @@ the selected language and simulated channels. Approval resets when the app reloa
 
 The same console now has Electron wrappers for **Windows and macOS** and Capacitor
 projects for **iOS and Android**. App bundles include the UI and Leaflet; they do
-not need Python, an API key, or a running web server. Online basemaps and remote
-incident data still require connectivity; offline mode uses labeled examples.
+not need Python, an API key, or a running web server. Packaged apps use built-in
+illustrative exercise data and make no automatic external network requests.
+The separately served development page can still access remote reference data.
 
 ```sh
 npm ci
@@ -27,6 +28,26 @@ downloadable CI artifacts, Intel Mac builds, and signing. Android CI outputs a
 debug APK; iOS CI outputs a simulator app and an unsigned device archive. The iOS
 archive needs your development team and provisioning before it can run on an iPhone.
 Desktop CI packages are unsigned development builds, not notarized/store releases.
+
+## App Store preparation
+
+The first store version is **1.0.0**: an offline communication exercise tool, with
+three independent language drafts, local recovery, map-layer review, and a native
+share sheet for clearly labeled exercise summaries. **About, privacy & support**
+inside the app explains use, local data, deletion, and support. It works offline.
+
+See [the submission checklist](docs/app-store/README.zh-CN.md), store metadata,
+privacy policy, and reviewer notes in `docs/app-store/`. The iOS build workflow
+tests the actual app on iPhone/iPad simulators and produces genuine screenshots
+alongside the unsigned archive. Enrollment, a registered Bundle ID, signing,
+App Store Connect setup and upload remain account-holder tasks. Passing builds
+does not guarantee App Review approval; real-device acceptance is still required.
+
+Sharing always includes **SIMULATION ONLY — NOT AN OFFICIAL ALERT**, all three
+drafts, channel choices, and the current language's session review status. iOS and
+Android open the system share sheet; browser/desktop copies use Web Share where
+available or download a text file. Selecting a recipient transfers the text to
+that recipient or app. Exported copies are not deleted by resetting local drafts.
 
 ## Run locally
 
@@ -66,6 +87,12 @@ is limited to 20,000 UTF-16 code units, with a 200 KiB limit on the saved record
 
 ## Map and source behavior
 
+- Packaged desktop/mobile apps use only bundled illustrative geometry, fictional
+  exercise checkpoints and fictional care sites. There is no online basemap or
+  live data fetch. The grid background is a schematic, not a street map; it cannot
+  establish real routes, boundaries, road access or shelter availability.
+- The following remote-source behavior applies only to the Flask development
+  page, not the shipped application:
 - Evacuation zones are illustrative scenario geometry, never official orders.
 - Fire perimeter, road closure, and mass care requests use the public ArcGIS URLs
   in `script.js`. A successful request is labeled **Remote**; its currency is

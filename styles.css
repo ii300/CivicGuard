@@ -778,6 +778,21 @@ body {
 
 .mobile-navigation { display: none; }
 
+.app-info { margin-top: 20px; font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.app-info details { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.app-info details details { margin-top: 12px; }
+.app-info summary { cursor: pointer; font-weight: 800; min-height: 44px; display: list-item; padding-block: 10px; }
+.app-info summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.app-info h3 { font-size: 15px; margin-top: 18px; }
+.app-info a { color: var(--blue); display: inline-block; padding-block: 8px; }
+.app-info p:last-child { margin-bottom: 0; }
+#shareStatus { font-size: 13px; line-height: 1.5; color: var(--muted); }
+html:has(meta[name="civicguard-distribution"][content="packaged"]) #map {
+    background-color: #e5ebe2;
+    background-image: linear-gradient(rgba(45, 97, 148, .1) 1px, transparent 1px), linear-gradient(90deg, rgba(45, 97, 148, .1) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
 /* Keep every section in document flow when three usable columns will not fit. */
 @media (max-width: 1180px) {
     .brand-row { flex-wrap: wrap; }

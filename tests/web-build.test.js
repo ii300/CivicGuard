@@ -11,13 +11,16 @@ test('app bundle contains local UI dependencies without backend secrets or gener
     try {
         await buildWeb(directory);
         const files = await fs.readdir(directory);
-        assert.deepEqual(files.sort(), ['console-core.js', 'draft-store.js', 'index.html', 'platform-storage.js', 'script.js', 'styles.css', 'vendor']);
+        assert.deepEqual(files.sort(), ['app-info.js', 'console-core.js', 'draft-store.js', 'exercise-export.js', 'index.html', 'platform-storage.js', 'script.js', 'styles.css', 'vendor']);
         const html = await fs.readFile(path.join(directory, 'index.html'), 'utf8');
         assert.ok(!html.includes('unpkg.com'));
         assert.match(html, /src="vendor\/leaflet\/leaflet.js"/);
         assert.match(html, /href="vendor\/leaflet\/leaflet.css"/);
         assert.match(html, /Content-Security-Policy/);
         assert.match(html, /script-src 'self'/);
+        assert.match(html, /name="civicguard-distribution" content="packaged"/);
+        assert.ok(!html.includes('rel="preconnect"'));
+        assert.ok(!html.includes("https://server.arcgisonline.com"));
         assert.match(html, /src="draft-store.js"/);
         assert.match(html, /src="platform-storage.js"/);
         for (const [, source] of html.matchAll(/<script[^>]+src="([^"]+)"/g)) {

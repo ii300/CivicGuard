@@ -46,7 +46,7 @@ class AppTests(unittest.TestCase):
 
     def test_ui_starts_without_api_configuration(self):
         self.app.config.update(ANTHROPIC_API_KEY="", ANTHROPIC_MODEL="")
-        for path in ("/", "/index.html", "/styles.css", "/script.js", "/console-core.js", "/draft-store.js", "/platform-storage.js"):
+        for path in ("/", "/index.html", "/styles.css", "/script.js", "/console-core.js", "/draft-store.js", "/platform-storage.js", "/exercise-export.js", "/app-info.js"):
             with self.subTest(path=path), self.client.get(path) as response:
                 self.assertEqual(response.status_code, 200)
         self.factory.assert_not_called()

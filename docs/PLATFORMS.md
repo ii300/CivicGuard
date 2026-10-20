@@ -3,11 +3,18 @@
 CivicGuard shares its existing Web interface across four application targets:
 Electron on Windows/macOS and Capacitor on iOS/Android. The generated app bundles
 contain the interface and Leaflet assets, so opening the composer does not require
-a Python server or an API key. Online maps and public ArcGIS data still require a
-network connection. These packages remain alert **simulations**: they do not send
+a Python server or an API key. Packaged apps use bundled illustrative layers and
+an original schematic grid, with no automatic external network requests. The
+separately served development page can still use online reference data.
+These packages remain alert **simulations**: they do not send
 alerts, fetch verified emergency instructions, or turn the optional Flask AI API
 into a deployed service. Drafts, language selection, and simulated channel choices
 save on this device; approval resets on reload and requires fresh review.
+
+For the minimum iOS App Store submission preparation, use
+[the submission checklist](app-store/README.zh-CN.md). The workflow also runs
+native iPhone/iPad UI tests and exports actual simulator screenshots. Store
+signing and upload require the account holder's Apple Developer membership.
 
 ## Download a build
 
@@ -19,9 +26,9 @@ is performed.
 
 | Target | Actions artifact | File inside the artifact | What it can run |
 | --- | --- | --- | --- |
-| Windows | `civicguard-win-x64-unsigned` | `CivicGuard-0.2.0-win-x64.exe` | x64 Windows installer; unsigned |
-| macOS Apple Silicon | `civicguard-mac-arm64-unsigned` | `CivicGuard-0.2.0-mac-arm64.dmg` and `.zip` | Apple Silicon Mac; not notarized |
-| macOS Intel | `civicguard-mac-x64-unsigned` | `CivicGuard-0.2.0-mac-x64.dmg` and `.zip` | Intel Mac; not notarized |
+| Windows | `civicguard-win-x64-unsigned` | `CivicGuard-1.0.0-win-x64.exe` | x64 Windows installer; unsigned |
+| macOS Apple Silicon | `civicguard-mac-arm64-unsigned` | `CivicGuard-1.0.0-mac-arm64.dmg` and `.zip` | Apple Silicon Mac; not notarized |
+| macOS Intel | `civicguard-mac-x64-unsigned` | `CivicGuard-1.0.0-mac-x64.dmg` and `.zip` | Intel Mac; not notarized |
 | Android | `civicguard-android-debug` | `app-debug.apk` | Android 7/API 24 or newer; debug-signed testing build |
 | iOS simulator | `civicguard-ios-simulator-arm64` | `CivicGuard-ios-simulator-arm64.zip` containing `App.app` | iOS Simulator on an Apple Silicon Mac |
 | iOS device compilation | `civicguard-ios-device-unsigned-archive` | `CivicGuard-ios-device-unsigned.xcarchive.zip` | Build archive for inspection; **cannot install on an iPhone** |

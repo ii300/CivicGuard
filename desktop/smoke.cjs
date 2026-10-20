@@ -35,7 +35,7 @@ async function main() {
         await electronApp.context().route("https://**/*", (route) => route.abort("internetdisconnected"));
         await page.reload();
         await expect(page.locator("h1")).toHaveText("Palisades Fire Simulation");
-        await expect(page.locator("#lastUpdated")).toContainText("Source requests completed");
+        await expect(page.locator("#lastUpdated")).toContainText("Offline exercise ready");
         await expect(page.locator("#perimeterSource")).toContainText("Sample");
         await expect(page.locator("#roadSource")).toContainText("Sample");
         await expect(page.locator("#careSource")).toContainText("Sample");

@@ -1,6 +1,6 @@
 {
   "name": "civicguard-simulation",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.js",
@@ -31,7 +31,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@capacitor/core": "8.5.3",
-    "@capacitor/preferences": "8.0.1"
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/share": "8.0.3"
   },
   "engines": {
     "node": ">=22.12.0"
