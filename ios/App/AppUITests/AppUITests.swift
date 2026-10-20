@@ -10,6 +10,10 @@ final class AppUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
     }
 
+    override func tearDownWithError() throws {
+        if app.state != .notRunning { app.terminate() }
+    }
+
     func testOfflineExerciseDraftRecoveryAndNativeSharing() {
         app.launch()
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 30), "The bundled app must launch without a server.")
@@ -55,12 +59,13 @@ final class AppUITests: XCTestCase {
         let share = app.buttons["Share exercise summary"].firstMatch
         reveal(share)
         share.tap()
-        attachScreenshot("native-share-sheet")
         // iOS may expose activity actions as cells or static text rather than buttons.
         // A visible system activity action proves sharing opened; no recipient is selected.
         let copy = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Copy")).firstMatch
         XCTAssertTrue(copy.waitForExistence(timeout: 15), "The iOS system share sheet must open. Accessibility tree: \(app.debugDescription)")
-        app.terminate()
+        attachScreenshot("native-share-sheet")
+        copy.tap()
+        XCTAssertTrue(app.staticTexts["Exercise summary shared using your chosen app."].waitForExistence(timeout: 15), "Copying the exercise must finish the native share operation.")
     }
 
     private func revealDraft(_ editor: XCUIElement) {
@@ -83,14 +88,24 @@ final class AppUITests: XCTestCase {
     }
 
     private func dismissKeyboard() {
-        guard app.keyboards.firstMatch.exists else { return }
+        let keyboard = app.keyboards.firstMatch
+        guard keyboard.exists else { return }
+        // iPad exposes Hide keyboard instead of the iPhone WebView's Done action.
+        let hide = app.buttons["Hide keyboard"].firstMatch
         let toolbarDone = app.toolbars.buttons["Done"].firstMatch
-        if toolbarDone.exists && toolbarDone.isHittable {
+        let done = app.buttons["Done"].firstMatch
+        if hide.exists && hide.isHittable {
+            hide.tap()
+        } else if toolbarDone.exists && toolbarDone.isHittable {
             toolbarDone.tap()
+        } else if done.exists && done.isHittable {
+            done.tap()
         } else {
-            let done = app.buttons["Done"].firstMatch
-            if done.exists && done.isHittable { done.tap() }
+            XCTFail("The keyboard must offer a visible dismissal action. Accessibility tree: \(app.debugDescription)")
         }
+        let dismissed = NSPredicate(format: "exists == false")
+        expectation(for: dismissed, evaluatedWith: keyboard)
+        waitForExpectations(timeout: 10)
     }
 
     private func attachScreenshot(_ name: String) {

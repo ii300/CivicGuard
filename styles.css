@@ -772,6 +772,17 @@ body {
     padding: var(--app-inset-top) var(--app-inset-right) var(--app-inset-bottom) var(--app-inset-left);
 }
 
+/* Scrolling content must not show through iOS's transparent status bar. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: var(--app-inset-top);
+    background: var(--panel);
+    z-index: 1200;
+    pointer-events: none;
+}
+
 .app-shell {
     height: calc(100dvh - var(--app-inset-top) - var(--app-inset-bottom));
 }

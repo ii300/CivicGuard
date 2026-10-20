@@ -41,6 +41,10 @@ test('packaged mobile UI works offline with local map assets and reachable touch
     const navigation = page.getByRole('navigation', { name: 'Console sections' });
     await expect(navigation).toBeVisible();
     await expect(page.locator('body')).toHaveCSS('padding-top', '44px');
+    expect(await page.evaluate(() => {
+        const safeAreaCover = getComputedStyle(document.body, '::before');
+        return { height: safeAreaCover.height, position: safeAreaCover.position };
+    })).toEqual({ height: '44px', position: 'fixed' });
     await expect(page.locator('body')).toHaveCSS('padding-bottom', '102px');
     await expect(navigation).toHaveCSS('padding-bottom', '40px');
     await navigation.getByRole('link', { name: 'Draft', exact: true }).tap();

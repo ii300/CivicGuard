@@ -9,11 +9,20 @@ const root = path.resolve(__dirname, '..');
 const outputRoot = path.join(root, 'release', 'ios');
 
 function run(command, args, options = {}) {
-    console.log(`> ${command} ${args.join(' ')}`);
-    return execFileSync(command, args, { cwd: root, stdio: 'inherit', ...options });
+    const started = Date.now();
+    const timeout = options.timeout ?? 60_000;
+    console.log(`[${new Date().toISOString()}] START (limit ${timeout / 1000}s): ${command} ${args.join(' ')}`);
+    try {
+        return execFileSync(command, args, { cwd: root, stdio: 'inherit', timeout, killSignal: 'SIGKILL', ...options });
+    } finally {
+        console.log(`[${new Date().toISOString()}] END (${((Date.now() - started) / 1000).toFixed(1)}s): ${command} ${args.slice(0, 3).join(' ')}`);
+    }
+}
+function capture(command, args, options = {}) {
+    return run(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], ...options });
 }
 function json(command, args) {
-    return JSON.parse(execFileSync(command, args, { cwd: root, encoding: 'utf8' }));
+    return JSON.parse(capture(command, args));
 }
 function filesBelow(directory) {
     if (!fs.existsSync(directory)) return [];
@@ -47,33 +56,40 @@ for (const device of [
     fs.rmSync(evidence, { recursive: true, force: true });
     fs.rmSync(screenshots, { recursive: true, force: true });
     try {
-        udid = execFileSync('xcrun', ['simctl', 'create', `CivicGuard ${device.slug} CI`, device.type.identifier, runtime.identifier], { encoding: 'utf8' }).trim();
-        run('xcrun', ['simctl', 'boot', udid]);
-        run('xcrun', ['simctl', 'bootstatus', udid, '-b']);
-        run('xcrun', ['simctl', 'status_bar', udid, 'override', '--time', '9:41', '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3', '--batteryState', 'charged', '--batteryLevel', '100']);
+        udid = capture('xcrun', ['simctl', 'create', `CivicGuard ${device.slug} CI`, device.type.identifier, runtime.identifier]).trim();
+        run('xcrun', ['simctl', 'boot', udid], { timeout: 300_000 });
+        run('xcrun', ['simctl', 'bootstatus', udid, '-b'], { timeout: 300_000 });
+        try {
+            // Cosmetic only; an unavailable status-bar override must not block app verification.
+            run('xcrun', ['simctl', 'status_bar', udid, 'override', '--time', '9:41', '--dataNetwork', 'wifi', '--wifiMode', 'active', '--wifiBars', '3', '--batteryState', 'charged', '--batteryLevel', '100'], { timeout: 120_000 });
+        } catch (error) {
+            console.warn(`Status-bar styling was unavailable for ${device.type.name}: ${error.message}`);
+        }
         run('xcodebuild', [
             '-project', 'ios/App/App.xcodeproj', '-scheme', 'App',
             '-configuration', 'Release', '-sdk', 'iphonesimulator',
-            '-destination', `platform=iOS Simulator,id=${udid}`,
+            '-destination', `platform=iOS Simulator,id=${udid}`, '-destination-timeout', '60',
             '-derivedDataPath', 'dist/ios-simulator',
             '-resultBundlePath', resultBundle,
-            '-parallel-testing-enabled', 'NO',
+            '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES',
+            '-default-test-execution-time-allowance', '180',
+            '-maximum-test-execution-time-allowance', '180',
             'ARCHS=arm64', 'CODE_SIGNING_ALLOWED=NO', 'test',
-        ]);
+        ], { timeout: 600_000 });
     } catch (error) {
         failed = true;
         console.error(`Native UI verification failed for ${device.type.name}: ${error.message}`);
     } finally {
         if (fs.existsSync(resultBundle)) {
             try {
-                run('xcrun', ['xcresulttool', 'export', 'attachments', '--path', resultBundle, '--output-path', evidence]);
+                run('xcrun', ['xcresulttool', 'export', 'attachments', '--path', resultBundle, '--output-path', evidence], { timeout: 120_000 });
                 fs.mkdirSync(screenshots, { recursive: true });
                 const captures = filesBelow(evidence).filter((filename) => filename.toLowerCase().endsWith('.png')).sort();
                 if (captures.length < 2) throw new Error('Native test did not produce the required app screenshots.');
                 for (const [index, filename] of captures.entries()) {
                     const output = path.join(screenshots, `native-exercise-${String(index + 1).padStart(2, '0')}.jpg`);
-                    run('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', 'best', filename, '--out', output]);
-                    const metadata = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'hasAlpha', output], { encoding: 'utf8' });
+                    run('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', 'best', filename, '--out', output], { timeout: 30_000 });
+                    const metadata = capture('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'hasAlpha', output], { timeout: 30_000 });
                     if (!metadata.includes(`pixelWidth: ${device.width}`) || !metadata.includes(`pixelHeight: ${device.height}`) || !metadata.includes('hasAlpha: no')) {
                         throw new Error(`Screenshot dimensions or alpha channel are invalid: ${metadata}`);
                     }
@@ -94,8 +110,8 @@ for (const device of [
             }
         }
         if (udid) {
-            try { run('xcrun', ['simctl', 'shutdown', udid]); } catch { /* It may already be shut down. */ }
-            try { run('xcrun', ['simctl', 'delete', udid]); } catch { /* Keep the original error. */ }
+            try { run('xcrun', ['simctl', 'shutdown', udid], { timeout: 30_000 }); } catch { /* It may already be shut down. */ }
+            try { run('xcrun', ['simctl', 'delete', udid], { timeout: 30_000 }); } catch { /* Keep the original error. */ }
         }
     }
 }
