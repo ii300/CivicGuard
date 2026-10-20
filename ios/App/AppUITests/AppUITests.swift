@@ -55,9 +55,11 @@ final class AppUITests: XCTestCase {
         let share = app.buttons["Share exercise summary"].firstMatch
         reveal(share)
         share.tap()
-        // A system activity action proves that native sharing opened; no recipient is selected.
-        let copy = app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Copy")).firstMatch
-        XCTAssertTrue(copy.waitForExistence(timeout: 15), "The iOS system share sheet must open.")
+        attachScreenshot("native-share-sheet")
+        // iOS may expose activity actions as cells or static text rather than buttons.
+        // A visible system activity action proves sharing opened; no recipient is selected.
+        let copy = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Copy")).firstMatch
+        XCTAssertTrue(copy.waitForExistence(timeout: 15), "The iOS system share sheet must open. Accessibility tree: \(app.debugDescription)")
         app.terminate()
     }
 
