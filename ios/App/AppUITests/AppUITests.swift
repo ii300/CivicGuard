@@ -18,11 +18,13 @@ final class AppUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 30), "The bundled app must launch without a server.")
         XCTAssertTrue(app.staticTexts["Offline exercise map"].waitForExistence(timeout: 30))
+        waitUntilVisible(app.staticTexts["Palisades Fire Simulation"].firstMatch)
         attachScreenshot("store-01-exercise")
 
         let mapLink = app.links["Map"].firstMatch
         if mapLink.exists && mapLink.isHittable {
             mapLink.tap()
+            waitUntilVisible(app.staticTexts["Offline exercise map"].firstMatch)
             attachScreenshot("store-02-map")
         }
 
@@ -38,21 +40,18 @@ final class AppUITests: XCTestCase {
         editor.tap()
         editor.typeText(marker)
         XCTAssertTrue(app.staticTexts["Saved on this device."].waitForExistence(timeout: 20), "This must exercise the native Preferences plugin.")
-        dismissKeyboard()
+
+        // Interrupt editing with the keyboard still open, as when someone closes
+        // the app mid-exercise. This also avoids iPad simulator keyboard-hide
+        // animations that never signal XCTest's idle detector on iOS 26.2.
+        restartAndVerifyDraft(editor, marker: marker)
 
         let approve = app.buttons["Approve Simulation"].firstMatch
         reveal(approve)
         approve.tap()
         XCTAssertTrue(app.staticTexts["Approved in simulation"].waitForExistence(timeout: 10))
 
-        app.terminate()
-        app.launch()
-        XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 30))
-        revealDraft(editor)
-        XCTAssertTrue(editor.waitForExistence(timeout: 20))
-        let restored = NSPredicate(format: "value CONTAINS %@", marker)
-        expectation(for: restored, evaluatedWith: editor)
-        waitForExpectations(timeout: 20)
+        restartAndVerifyDraft(editor, marker: marker)
         XCTAssertTrue(app.staticTexts["Pending simulation review"].exists, "A previous approval must never survive a restart.")
         XCTAssertFalse(app.staticTexts["Approved in simulation"].exists)
 
@@ -87,28 +86,27 @@ final class AppUITests: XCTestCase {
         XCTAssertTrue(element.exists && element.isHittable, "The exercise control must be reachable.")
     }
 
-    private func dismissKeyboard() {
-        let keyboard = app.keyboards.firstMatch
-        guard keyboard.exists else { return }
-        // iPad exposes Hide keyboard instead of the iPhone WebView's Done action.
-        let hide = app.buttons["Hide keyboard"].firstMatch
-        let toolbarDone = app.toolbars.buttons["Done"].firstMatch
-        let done = app.buttons["Done"].firstMatch
-        if hide.exists && hide.isHittable {
-            hide.tap()
-        } else if toolbarDone.exists && toolbarDone.isHittable {
-            toolbarDone.tap()
-        } else if done.exists && done.isHittable {
-            done.tap()
-        } else {
-            XCTFail("The keyboard must offer a visible dismissal action. Accessibility tree: \(app.debugDescription)")
-        }
-        let dismissed = NSPredicate(format: "exists == false")
-        expectation(for: dismissed, evaluatedWith: keyboard)
+    private func restartAndVerifyDraft(_ editor: XCUIElement, marker: String) {
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 30))
+        revealDraft(editor)
+        XCTAssertTrue(editor.waitForExistence(timeout: 20))
+        let restored = NSPredicate(format: "value CONTAINS %@", marker)
+        expectation(for: restored, evaluatedWith: editor)
+        waitForExpectations(timeout: 20)
+    }
+
+    private func waitUntilVisible(_ element: XCUIElement) {
+        XCTAssertTrue(element.waitForExistence(timeout: 20))
+        expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: element)
         waitForExpectations(timeout: 10)
     }
 
     private func attachScreenshot(_ name: String) {
+        // Anchor jumps can precede WKWebView's offscreen compositing pass.
+        // Capture the real rendered screen after a short bounded settling period.
+        Thread.sleep(forTimeInterval: 1)
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways

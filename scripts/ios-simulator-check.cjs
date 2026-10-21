@@ -24,12 +24,25 @@ function capture(command, args, options = {}) {
 function json(command, args) {
     return JSON.parse(capture(command, args));
 }
-function filesBelow(directory) {
-    if (!fs.existsSync(directory)) return [];
-    return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-        const fullPath = path.join(directory, entry.name);
-        return entry.isDirectory() ? filesBelow(fullPath) : [fullPath];
-    });
+function storeCaptures(evidence) {
+    const tests = JSON.parse(fs.readFileSync(path.join(evidence, 'manifest.json'), 'utf8'));
+    const captures = new Map();
+    for (const test of tests) {
+        for (const attachment of test.attachments ?? []) {
+            const name = /^(store-\d{2}-[a-z0-9-]+)(?:_|\.|$)/.exec(attachment.suggestedHumanReadableName ?? '')?.[1];
+            const filename = attachment.exportedFileName;
+            if (!name || attachment.isAssociatedWithFailure || typeof filename !== 'string' || !filename.endsWith('.png')) continue;
+            if (path.basename(filename) !== filename) throw new Error('Unexpected screenshot path in XCTest manifest.');
+            const previous = captures.get(name);
+            if (!previous || attachment.timestamp > previous.timestamp) {
+                captures.set(name, { name, filename: path.join(evidence, filename), attachment: filename, timestamp: attachment.timestamp });
+            }
+        }
+    }
+    for (const required of ['store-01-exercise', 'store-03-message']) {
+        if (!captures.has(required)) throw new Error(`Native test did not produce ${required}.`);
+    }
+    return [...captures.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const runtime = json('xcrun', ['simctl', 'list', 'runtimes', '--json']).runtimes
@@ -84,10 +97,9 @@ for (const device of [
             try {
                 run('xcrun', ['xcresulttool', 'export', 'attachments', '--path', resultBundle, '--output-path', evidence], { timeout: 120_000 });
                 fs.mkdirSync(screenshots, { recursive: true });
-                const captures = filesBelow(evidence).filter((filename) => filename.toLowerCase().endsWith('.png')).sort();
-                if (captures.length < 2) throw new Error('Native test did not produce the required app screenshots.');
-                for (const [index, filename] of captures.entries()) {
-                    const output = path.join(screenshots, `native-exercise-${String(index + 1).padStart(2, '0')}.jpg`);
+                const captures = storeCaptures(evidence);
+                for (const { name, filename } of captures) {
+                    const output = path.join(screenshots, `${name}.jpg`);
                     run('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', 'best', filename, '--out', output], { timeout: 30_000 });
                     const metadata = capture('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'hasAlpha', output], { timeout: 30_000 });
                     if (!metadata.includes(`pixelWidth: ${device.width}`) || !metadata.includes(`pixelHeight: ${device.height}`) || !metadata.includes('hasAlpha: no')) {
@@ -101,7 +113,8 @@ for (const device of [
                     width: device.width,
                     height: device.height,
                     conversion: 'JPEG encoding only; no resizing, compositing, or content replacement',
-                    files: fs.readdirSync(screenshots).filter((filename) => filename.endsWith('.jpg')),
+                    selection: 'Only explicit store-* XCTest attachments; diagnostic and system-share captures remain in native UI evidence',
+                    files: captures.map(({ name, attachment }) => ({ filename: `${name}.jpg`, sourceAttachment: attachment })),
                 };
                 fs.writeFileSync(path.join(screenshots, 'capture-info.json'), `${JSON.stringify(manifest, null, 2)}\n`);
             } catch (error) {
