@@ -565,6 +565,7 @@ async function setupMessageComposer() {
     let saveRevision = 0;
     let preserveUnreadDrafts = false;
     let store;
+    const unreadDraftWarning = "Changes in this window are not saved. Share or copy them before reopening to retry reading, or choose Reset all drafts to clear the saved copy and enable autosave.";
 
     function setSaveStatus(status, message) {
         saveStatus.dataset.state = status;
@@ -613,6 +614,10 @@ async function setupMessageComposer() {
 
     async function saveDrafts() {
         const revision = ++saveRevision;
+        if (preserveUnreadDrafts) {
+            setSaveStatus("error", `Autosave is paused to protect saved drafts that could not be read. ${unreadDraftWarning}`);
+            return;
+        }
         if (!store) {
             setSaveStatus("error", "Autosave is unavailable. Keep this window open to retain your edits.");
             return;
@@ -647,7 +652,7 @@ async function setupMessageComposer() {
         language = nextLanguage;
         renderLanguage();
         updateState("Language changed. Review this draft before approving the simulation.");
-        if (!preserveUnreadDrafts) void saveDrafts();
+        void saveDrafts();
     }
 
     tabs.forEach((button, index) => {
@@ -668,7 +673,6 @@ async function setupMessageComposer() {
     textarea.addEventListener("input", () => {
         if (busy) return;
         drafts[language] = textarea.value;
-        preserveUnreadDrafts = false;
         updateState("Draft changed. Review again before approving the simulation.");
         void saveDrafts();
     });
@@ -677,7 +681,6 @@ async function setupMessageComposer() {
         const active = button.getAttribute("aria-pressed") !== "true";
         button.setAttribute("aria-pressed", String(active));
         button.classList.toggle("active", active);
-        preserveUnreadDrafts = false;
         updateState("Channels changed. Review again before approving the simulation.");
         void saveDrafts();
     }));
@@ -736,7 +739,7 @@ async function setupMessageComposer() {
             restore({ drafts: { ...MESSAGES }, language: "en", channels: defaultChannels });
             setSaveStatus("empty", "Saved drafts cleared. New edits will save on this device.");
         } else {
-            setSaveStatus("error", "Could not clear saved drafts. Your current edits are unchanged.");
+            setSaveStatus("error", `Could not clear saved drafts. Your current edits are unchanged.${preserveUnreadDrafts ? ` ${unreadDraftWarning}` : ""}`);
         }
         setBusy(false);
         closeConfirmation();
@@ -759,8 +762,8 @@ async function setupMessageComposer() {
     } else {
         renderLanguage();
         if (loaded.status === "empty") setSaveStatus("empty", "Drafts save on this device as you edit.");
-        else if (loaded.status === "invalid") setSaveStatus("error", "Saved drafts could not be read. Original scenario text is shown; new edits will replace the saved copy.");
-        else setSaveStatus("error", "Autosave is unavailable. Keep this window open to retain your edits.");
+        else if (loaded.status === "invalid") setSaveStatus("error", `Saved drafts could not be read. Original scenario text is shown. ${unreadDraftWarning}`);
+        else setSaveStatus("error", `Autosave is unavailable because saved drafts could not be read. ${unreadDraftWarning}`);
     }
     setBusy(false);
 }

@@ -108,6 +108,61 @@ test('resetting saved drafts requires confirmation and persists after reload', a
     await expect(page.locator('#approvalStatus')).toHaveText('Pending simulation review');
 });
 
+test('a temporary initial storage read failure cannot overwrite unread multilingual drafts', async ({ page }) => {
+    await page.addInitScript(() => {
+        const key = 'civicguard.palisades-drafts.v1';
+        const originalGet = Storage.prototype.getItem;
+        const originalSet = Storage.prototype.setItem;
+        if (!sessionStorage.getItem('protected-drafts-seeded')) {
+            originalSet.call(localStorage, key, JSON.stringify({
+                version: 1, scenario: 'palisades-2025',
+                drafts: { en: 'Saved English exercise.', es: 'Ejercicio guardado.', zh: '已保存的中文演练。' },
+                language: 'zh', channels: ['SMS'],
+            }));
+            sessionStorage.setItem('protected-drafts-seeded', 'true');
+        }
+        window.protectedDraftWrites = 0;
+        Storage.prototype.getItem = function (name) {
+            if (this === localStorage && name === key && sessionStorage.getItem('allow-protected-draft-reads') !== 'true') {
+                throw new DOMException('Temporary read failure', 'SecurityError');
+            }
+            return originalGet.call(this, name);
+        };
+        Storage.prototype.setItem = function (name, value) {
+            if (this === localStorage && name === key) window.protectedDraftWrites += 1;
+            return originalSet.call(this, name, value);
+        };
+        window.inspectProtectedDrafts = () => originalGet.call(localStorage, key);
+    });
+    await openOfflineConsole(page);
+    await openDraftSection(page);
+    await expect(page.locator('#draftSaveStatus')).toContainText('Changes in this window are not saved');
+    const savedRecord = await page.evaluate(() => window.inspectProtectedDrafts());
+    await page.getByRole('button', { name: 'WEA', exact: true }).tap();
+    await page.locator('#alertText').fill('This changed English draft must remain only in this window.');
+    await page.getByRole('tab', { name: '中文', exact: true }).tap();
+    await page.locator('#alertText').fill('本次窗口中的修改不能覆盖未读草稿。');
+    await page.locator('#resetDraftsButton').tap();
+    await page.locator('#cancelResetDraftsButton').tap();
+    await page.getByRole('button', { name: 'Social', exact: true }).tap();
+    await page.getByRole('button', { name: 'Approve Simulation', exact: true }).tap();
+    await expect(page.locator('#approvalStatus')).toHaveText('Approved in simulation');
+    await expect(page.locator('#shareExerciseButton')).toBeEnabled();
+    expect(await page.evaluate(() => window.protectedDraftWrites)).toBe(0);
+    expect(await page.evaluate(() => window.inspectProtectedDrafts())).toBe(savedRecord);
+    await expect(page.locator('#draftSaveStatus')).toContainText('Share or copy them before reopening');
+
+    await page.evaluate(() => sessionStorage.setItem('allow-protected-draft-reads', 'true'));
+    await page.reload();
+    await openDraftSection(page);
+    await expect(page.locator('#alertText')).toHaveValue('已保存的中文演练。');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Drafts restored from this device');
+    await page.getByRole('tab', { name: 'EN', exact: true }).tap();
+    await expect(page.locator('#alertText')).toHaveValue('Saved English exercise.');
+    await page.getByRole('tab', { name: 'ES', exact: true }).tap();
+    await expect(page.locator('#alertText')).toHaveValue('Ejercicio guardado.');
+});
+
 test('sharing downloads all three language drafts as a clearly labeled exercise text file', async ({ page }) => {
     await page.addInitScript(() => {
         Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });

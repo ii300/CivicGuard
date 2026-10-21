@@ -78,8 +78,11 @@ continues if saving fails. Restored drafts always
 require a fresh simulation review; approval is never stored.
 
 **Reset drafts** asks for confirmation before clearing the saved copy and restoring
-the original scenario. Canceling keeps every edit. Invalid or incompatible saved
-data is reported and left untouched until you edit or confirm a reset.
+the original scenario. Canceling keeps every edit. If existing drafts cannot be
+read, autosave pauses so edits or channel changes cannot overwrite that unread
+copy. You can still edit, review and share the current exercise. Preserve any
+unsaved work before reopening to retry reading, or explicitly confirm **Reset all
+drafts** to replace the saved copy and resume autosave.
 
 Native iOS/Android apps use Capacitor Preferences; desktop/browser copies use
 localStorage. Drafts are not synced between devices or app/browser installations.

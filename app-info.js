@@ -104,6 +104,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
             "Share an exercise summary when you want to discuss your work. Review all three drafts before sharing; each summary is labeled SIMULATION ONLY.",
             "Wait for “Saved on this device” before closing. Reset drafts clears your saved edits after confirmation.",
         ].forEach((step) => element("li", step, steps));
+        element("p", "If saved drafts cannot be read, autosave pauses to protect them. You can still edit, review and share. Current changes remain only in this window: share or copy them before reopening to retry, or confirm Reset all drafts to replace the saved copy and resume autosave.", details);
 
         const privacy = disclosure("Privacy policy", details);
         privacy.id = "appPrivacyPolicy";

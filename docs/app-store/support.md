@@ -34,6 +34,8 @@ The summary includes all three language drafts and the selected simulated channe
 
 **The app says it could not save. What should I do?**
 
-Keep the app open, preserve your work through sharing or an appropriate local destination, and check device storage. Editing again retries saving. Each language has a 20,000 UTF-16 code-unit limit, and the saved record has a 200 KiB total limit. If the problem continues, report the visible error and steps through the support channel.
+Keep the app open, preserve your work through sharing or an appropriate local destination, and check device storage. If reading previously saved drafts failed, autosave stays paused to protect that unread copy. Current edits remain only in the open window: share or copy them before reopening to retry reading. Choosing **Reset drafts** and confirming **Reset all drafts** explicitly replaces the saved copy and resumes autosave after clearing succeeds. Canceling or a failed reset leaves that copy protected.
+
+If drafts were read successfully but a later write fails, editing again retries saving. Each language has a 20,000 UTF-16 code-unit limit, and the saved record has a 200 KiB total limit. If the problem continues, report the visible error and steps through the support channel.
 
 [Read the privacy policy](privacy.md).

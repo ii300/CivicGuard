@@ -67,6 +67,49 @@ async function openConsole(page, options) {
     }
 }
 
+async function protectUnreadDrafts(page) {
+    await page.addInitScript(() => {
+        const key = 'civicguard.palisades-drafts.v1';
+        const originalGet = Storage.prototype.getItem;
+        const originalSet = Storage.prototype.setItem;
+        const originalRemove = Storage.prototype.removeItem;
+        const saved = JSON.stringify({
+            version: 1, scenario: 'palisades-2025',
+            drafts: { en: 'Previously saved English.', es: 'Español guardado anteriormente.', zh: '此前保存的中文草稿。' },
+            language: 'zh', channels: ['SMS'],
+        });
+        if (!sessionStorage.getItem('drafts-seeded-for-test')) {
+            originalSet.call(localStorage, key, saved);
+            sessionStorage.setItem('drafts-seeded-for-test', 'true');
+        }
+        window.draftWriteCalls = 0;
+        window.blockDraftReads = sessionStorage.getItem('allow-draft-reads-for-test') !== 'true';
+        window.blockDraftRemoval = false;
+        window.exerciseShares = [];
+        Storage.prototype.getItem = function (name) {
+            if (this === localStorage && name === key && window.blockDraftReads) throw new DOMException('Temporary read failure', 'SecurityError');
+            return originalGet.call(this, name);
+        };
+        Storage.prototype.setItem = function (name, value) {
+            if (this === localStorage && name === key) window.draftWriteCalls += 1;
+            return originalSet.call(this, name, value);
+        };
+        Storage.prototype.removeItem = function (name) {
+            if (this === localStorage && name === key && window.blockDraftRemoval) throw new DOMException('Temporary removal failure', 'SecurityError');
+            return originalRemove.call(this, name);
+        };
+        window.readSavedDraftForTest = () => originalGet.call(localStorage, key);
+        window.restoreDraftReadsForTest = () => {
+            window.blockDraftReads = false;
+            sessionStorage.setItem('allow-draft-reads-for-test', 'true');
+        };
+        Object.defineProperty(navigator, 'share', {
+            configurable: true,
+            async value(payload) { window.exerciseShares.push(payload); },
+        });
+    });
+}
+
 test("empty remote services show zero records without substituting sample incidents", async ({ page }) => {
     await openConsole(page);
     await expect(page.locator("#closureCount")).toHaveText("0 (remote)");
@@ -228,38 +271,108 @@ test("the narrow layout remains within the viewport and the composer is usable",
     await expect(page.locator("#approvalStatus")).toHaveText("Approved in simulation");
 });
 
-test("corrupt saved drafts are reported without overwriting them before a new edit", async ({ page }) => {
+test("corrupt saved drafts remain protected through editing until an explicit confirmed reset", async ({ page }) => {
     await page.addInitScript(() => {
         if (localStorage.getItem('civicguard.palisades-drafts.v1') === null) {
             localStorage.setItem('civicguard.palisades-drafts.v1', '{broken draft');
         }
     });
     await openConsole(page);
-    await expect(page.locator('#draftSaveStatus')).toContainText('Saved drafts could not be read');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Changes in this window are not saved');
     await page.getByRole('tab', { name: 'ES', exact: true }).click();
     await page.getByRole('tab', { name: 'EN', exact: true }).click();
-    await expect(page.locator('#draftSaveStatus')).toContainText('Saved drafts could not be read');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Changes in this window are not saved');
     expect(await page.evaluate(() => localStorage.getItem('civicguard.palisades-drafts.v1'))).toBe('{broken draft');
-    await page.locator('#alertText').fill('A replacement draft after recovery.');
+    await page.locator('#alertText').fill('Unsaved edits must not replace an unread record.');
+    await page.getByRole('button', { name: 'WEA', exact: true }).click();
+    await expect(page.locator('#draftSaveStatus')).toContainText('Changes in this window are not saved');
+    expect(await page.evaluate(() => localStorage.getItem('civicguard.palisades-drafts.v1'))).toBe('{broken draft');
+    await page.locator('#resetDraftsButton').click();
+    await page.locator('#confirmResetDraftsButton').click();
+    await expect(page.locator('#draftSaveStatus')).toContainText('Saved drafts cleared');
+    await page.locator('#alertText').fill('A replacement draft after an explicit reset.');
     await expect(page.locator('#draftSaveStatus')).toHaveText('Saved on this device.');
     await page.reload();
-    await expect(page.locator('#alertText')).toHaveValue('A replacement draft after recovery.');
+    await expect(page.locator('#alertText')).toHaveValue('A replacement draft after an explicit reset.');
     await expect(page.locator('#approvalStatus')).toHaveText('Pending simulation review');
 });
 
-test("storage failures keep the composer usable and saving recovers on a later edit", async ({ page }) => {
+test("a failed initial read protects all saved drafts while editing, approving and sharing remain usable", async ({ page }) => {
+    await protectUnreadDrafts(page);
+    await openConsole(page);
+    await expect(page.locator('#draftSaveStatus')).toContainText('Changes in this window are not saved');
+    const originalRecord = await page.evaluate(() => window.readSavedDraftForTest());
+    await page.getByRole('button', { name: 'WEA', exact: true }).click();
+    await page.locator('#alertText').fill('Unsaved English changes.');
+    await page.getByRole('tab', { name: 'ES', exact: true }).click();
+    await page.locator('#alertText').fill('Cambios en español sin guardar.');
+    await page.getByRole('tab', { name: '中文', exact: true }).click();
+    await page.locator('#alertText').fill('本次窗口中未保存的中文修改。');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Share or copy them before reopening');
+    expect(await page.evaluate(() => window.draftWriteCalls)).toBe(0);
+    expect(await page.evaluate(() => window.readSavedDraftForTest())).toBe(originalRecord);
+    await page.locator('#approveButton').click();
+    await expect(page.locator('#approvalStatus')).toHaveText('Approved in simulation');
+    await page.locator('#shareExerciseButton').click();
+    await expect(page.locator('#shareStatus')).toHaveText('Exercise summary shared using your chosen app.');
+    const shares = await page.evaluate(() => window.exerciseShares);
+    expect(shares).toHaveLength(1);
+    for (const draft of ['Unsaved English changes.', 'Cambios en español sin guardar.', '本次窗口中未保存的中文修改。']) expect(shares[0].text).toContain(draft);
+    expect(await page.evaluate(() => window.draftWriteCalls)).toBe(0);
+    expect(await page.evaluate(() => window.readSavedDraftForTest())).toBe(originalRecord);
+
+    await page.evaluate(() => window.restoreDraftReadsForTest());
+    await page.reload();
+    await expect(page.locator('#alertText')).toHaveValue('此前保存的中文草稿。');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Drafts restored from this device');
+    await page.getByRole('tab', { name: 'EN', exact: true }).click();
+    await expect(page.locator('#alertText')).toHaveValue('Previously saved English.');
+    await page.getByRole('tab', { name: 'ES', exact: true }).click();
+    await expect(page.locator('#alertText')).toHaveValue('Español guardado anteriormente.');
+});
+
+test("only a successful confirmed reset releases protection after a failed initial read", async ({ page }) => {
+    await protectUnreadDrafts(page);
+    await openConsole(page);
+    const originalRecord = await page.evaluate(() => window.readSavedDraftForTest());
+    await page.locator('#alertText').fill('Keep these unsaved edits through cancelled or failed resets.');
+    await page.locator('#resetDraftsButton').click();
+    await page.locator('#cancelResetDraftsButton').click();
+    await page.getByRole('button', { name: 'Social', exact: true }).click();
+    expect(await page.evaluate(() => window.draftWriteCalls)).toBe(0);
+    expect(await page.evaluate(() => window.readSavedDraftForTest())).toBe(originalRecord);
+
+    await page.evaluate(() => { window.blockDraftRemoval = true; });
+    await page.locator('#resetDraftsButton').click();
+    await page.locator('#confirmResetDraftsButton').click();
+    await expect(page.locator('#draftSaveStatus')).toContainText('Could not clear saved drafts');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Changes in this window are not saved');
+    await expect(page.locator('#alertText')).toHaveValue('Keep these unsaved edits through cancelled or failed resets.');
+    await page.locator('#alertText').fill('Still protected after the failed reset.');
+    expect(await page.evaluate(() => window.draftWriteCalls)).toBe(0);
+    expect(await page.evaluate(() => window.readSavedDraftForTest())).toBe(originalRecord);
+
+    await page.evaluate(() => { window.blockDraftRemoval = false; });
+    await page.locator('#resetDraftsButton').click();
+    await page.locator('#confirmResetDraftsButton').click();
+    await expect(page.locator('#draftSaveStatus')).toContainText('Saved drafts cleared');
+    expect(await page.evaluate(() => window.readSavedDraftForTest())).toBeNull();
+    await page.locator('#alertText').fill('Autosave resumes after explicitly clearing the unread copy.');
+    await expect(page.locator('#draftSaveStatus')).toHaveText('Saved on this device.');
+    expect(await page.evaluate(() => window.draftWriteCalls)).toBe(1);
+    expect(JSON.parse(await page.evaluate(() => window.readSavedDraftForTest())).drafts.en).toBe('Autosave resumes after explicitly clearing the unread copy.');
+});
+
+test("write failures after a successful initial load keep the composer usable and retry on later edits", async ({ page }) => {
     await page.addInitScript(() => {
-        const originalGet = Storage.prototype.getItem;
         const originalSet = Storage.prototype.setItem;
-        Storage.prototype.getItem = () => { throw new DOMException('Blocked', 'SecurityError'); };
         Storage.prototype.setItem = () => { throw new DOMException('Full', 'QuotaExceededError'); };
         window.restoreStorageForTest = () => {
-            Storage.prototype.getItem = originalGet;
             Storage.prototype.setItem = originalSet;
         };
     });
     await openConsole(page);
-    await expect(page.locator('#draftSaveStatus')).toContainText('Autosave is unavailable');
+    await expect(page.locator('#draftSaveStatus')).toContainText('Drafts save on this device as you edit');
     await page.locator('#alertText').fill('Still editable while storage is blocked.');
     await expect(page.locator('#draftSaveStatus')).toContainText('Could not save on this device');
     await page.locator('#approveButton').click();
