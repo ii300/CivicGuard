@@ -10,6 +10,11 @@ const ASSETS = Object.freeze({
     "/styles.css": "text/css; charset=utf-8",
     "/script.js": "text/javascript; charset=utf-8",
     "/console-core.js": "text/javascript; charset=utf-8",
+    "/draft-store.js": "text/javascript; charset=utf-8",
+    "/platform-storage.js": "text/javascript; charset=utf-8",
+    "/exercise-export.js": "text/javascript; charset=utf-8",
+    "/app-info.js": "text/javascript; charset=utf-8",
+    "/vendor/capacitor/capacitor.js": "text/javascript; charset=utf-8",
     "/vendor/leaflet/leaflet.js": "text/javascript; charset=utf-8",
     "/vendor/leaflet/leaflet.css": "text/css; charset=utf-8",
     "/vendor/leaflet/images/layers.png": "image/png",
@@ -24,8 +29,8 @@ const CONTENT_SECURITY_POLICY = [
     "script-src 'self'",
     // Leaflet positions map layers with inline styles.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https://server.arcgisonline.com",
-    "connect-src 'self' https://services.arcgis.com https://services5.arcgis.com https://services7.arcgis.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
     "font-src 'self'",
     "object-src 'none'",
     "base-uri 'none'",
@@ -37,6 +42,8 @@ const CONTENT_SECURITY_POLICY = [
 const EXTERNAL_URLS = new Set([
     "https://experience.arcgis.com/experience/fedf0447f6c9485e804d1ac9b993632e/",
     "https://leafletjs.com/",
+    "https://github.com/ii300/CivicGuard/issues/new/choose",
+    "https://github.com/ii300/CivicGuard/issues",
 ]);
 
 function parseUrl(value) {

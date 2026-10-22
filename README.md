@@ -3,14 +3,16 @@
 A local wildfire alert **simulation** inspired by the January 2025 Palisades fire.
 It combines a map, editable English/Spanish/Chinese drafts, and simulated channel
 selection and approval. It does not send public alerts or verify current emergency
-conditions. Language drafts are independent, kept in memory, and reset on reload.
+conditions. Language drafts are independent and save on this device along with
+the selected language and simulated channels. Approval resets when the app reloads.
 
 ## Desktop and mobile apps
 
 The same console now has Electron wrappers for **Windows and macOS** and Capacitor
 projects for **iOS and Android**. App bundles include the UI and Leaflet; they do
-not need Python, an API key, or a running web server. Online basemaps and remote
-incident data still require connectivity; offline mode uses labeled examples.
+not need Python, an API key, or a running web server. Packaged apps use built-in
+illustrative exercise data and make no automatic external network requests.
+The separately served development page can still access remote reference data.
 
 ```sh
 npm ci
@@ -26,6 +28,28 @@ downloadable CI artifacts, Intel Mac builds, and signing. Android CI outputs a
 debug APK; iOS CI outputs a simulator app and an unsigned device archive. The iOS
 archive needs your development team and provisioning before it can run on an iPhone.
 Desktop CI packages are unsigned development builds, not notarized/store releases.
+
+## App Store preparation
+
+The first store version is **1.0.0**: an offline communication exercise tool, with
+three independent language drafts, local recovery, map-layer review, and a native
+share sheet for clearly labeled exercise summaries. **About, privacy & support**
+inside the app explains use, local data, deletion, and support. It works offline.
+
+See [the submission checklist](docs/app-store/README.zh-CN.md), store metadata,
+privacy policy, and reviewer notes in `docs/app-store/`. The iOS build workflow
+tests the actual app on iPhone/iPad simulators and produces genuine screenshots
+alongside the unsigned archive. Enrollment, a registered Bundle ID, signing,
+App Store Connect setup and upload remain account-holder tasks. Passing builds
+does not guarantee App Review approval; real-device acceptance is still required.
+
+Sharing always includes **SIMULATION ONLY — NOT AN OFFICIAL ALERT**, all three
+drafts, channel choices, and the current language's session review status. iOS and
+Android open the system share sheet; browsers use Web Share where available or
+download a text file. The Electron shell keeps downloads disabled and reports
+sharing unavailable, so important desktop text must be copied manually.
+Selecting a recipient transfers the text to
+that recipient or app. Exported copies are not deleted by resetting local drafts.
 
 ## Run locally
 
@@ -43,8 +67,37 @@ explicit UI assets; it does not expose `.env`, the database, or repository files
 The SQLite database is created locally on first app startup and is ignored by Git.
 The development server binds to localhost with debug mode off.
 
+## Saved drafts
+
+Edits save automatically on this device. Reopening the same app or browser profile
+restores all three language drafts, the active language, and channel choices.
+The save status beneath the editor confirms successful writes or explains when
+storage is unavailable. Wait for **Saved on this device** before closing or
+reloading; an unfinished write may not survive an immediate close. Editing
+continues if saving fails. Restored drafts always
+require a fresh simulation review; approval is never stored.
+
+**Reset drafts** asks for confirmation before clearing the saved copy and restoring
+the original scenario. Canceling keeps every edit. If existing drafts cannot be
+read, autosave pauses so edits or channel changes cannot overwrite that unread
+copy. You can still edit, review and share the current exercise. Preserve any
+unsaved work before reopening to retry reading, or explicitly confirm **Reset all
+drafts** to replace the saved copy and resume autosave.
+
+Native iOS/Android apps use Capacitor Preferences; desktop/browser copies use
+localStorage. Drafts are not synced between devices or app/browser installations.
+Uninstalling the app or clearing its data can remove them. This is one current
+draft per language, not an edit history or encrypted backup. Each language draft
+is limited to 20,000 UTF-16 code units, with a 200 KiB limit on the saved record.
+
 ## Map and source behavior
 
+- Packaged desktop/mobile apps use only bundled illustrative geometry, fictional
+  exercise checkpoints and fictional care sites. There is no online basemap or
+  live data fetch. The grid background is a schematic, not a street map; it cannot
+  establish real routes, boundaries, road access or shelter availability.
+- The following remote-source behavior applies only to the Flask development
+  page, not the shipped application:
 - Evacuation zones are illustrative scenario geometry, never official orders.
 - Fire perimeter, road closure, and mass care requests use the public ArcGIS URLs
   in `script.js`. A successful request is labeled **Remote**; its currency is
@@ -120,7 +173,7 @@ the Windows/macOS applications separately.
 
 1. Add timestamped, versioned source snapshots, update metadata, and explicit retry
    controls so historical and current data can be evaluated reproducibly.
-2. Persist drafts and review versions, and expose a keyboard-accessible list of
+2. Add draft history and review versions, and expose a keyboard-accessible list of
    map records outside popups. Add language review and channel-specific validation.
 3. Before any real deployment, define authorized roles, approval/audit requirements,
    rate limits, and a separately validated alert delivery integration.

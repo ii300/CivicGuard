@@ -1,3 +1,5 @@
+const PACKAGED_EXERCISE = document.querySelector('meta[name="civicguard-distribution"]')?.content === "packaged";
+
 const SOURCES = {
     palisadesPerimeter:
         "https://services.arcgis.com/RmCCgQtiZLDCtblq/arcgis/rest/services/Eaton_and_Palisades_Dissolved_Fire_Perimeters/FeatureServer/0/query?where=FireName%3D%27Palisades%20Fire%27&outFields=*&returnGeometry=true&f=geojson&outSR=4326",
@@ -126,34 +128,34 @@ const fallbackRoadClosures = {
     type: "FeatureCollection",
     features: [
         pointFeature([-118.547, 34.082], {
-            Road_Closure: "Palisades Dr & Chastain Pkwy",
-            Type_Of_Closure: "Soft Closure",
+            Road_Closure: "Exercise checkpoint A",
+            Type_Of_Closure: "Illustrative checkpoint",
             Date_Of_Closure: "01/08/2025",
-            Directions: "Controlled eastbound movement toward Sunset",
+            Directions: "Fictional exercise point; no real access or route information",
         }),
         pointFeature([-118.595, 34.091], {
-            Road_Closure: "Topanga Canyon Blvd & Entrada Rd",
-            Type_Of_Closure: "Hard Closure",
+            Road_Closure: "Exercise checkpoint B",
+            Type_Of_Closure: "Illustrative checkpoint",
             Date_Of_Closure: "01/08/2025",
-            Directions: "Canyon access closed to non-emergency traffic",
+            Directions: "Fictional exercise point; no real access or route information",
         }),
         pointFeature([-118.492, 34.088], {
-            Road_Closure: "Mandeville Canyon Rd & Westridge Rd",
-            Type_Of_Closure: "Soft Closure",
+            Road_Closure: "Exercise checkpoint C",
+            Type_Of_Closure: "Illustrative checkpoint",
             Date_Of_Closure: "01/08/2025",
-            Directions: "Checkpoint with law enforcement presence",
+            Directions: "Fictional exercise point; no real access or route information",
         }),
         pointFeature([-118.606, 34.128], {
-            Road_Closure: "Mulholland Dr & Topanga Canyon Blvd",
-            Type_Of_Closure: "Hard Closure",
+            Road_Closure: "Exercise checkpoint D",
+            Type_Of_Closure: "Illustrative checkpoint",
             Date_Of_Closure: "01/08/2025",
-            Directions: "Ridge road closed near active fire perimeter",
+            Directions: "Fictional exercise point; no real access or route information",
         }),
         pointFeature([-118.475, 34.128], {
-            Road_Closure: "Mulholland Dr & Sepulveda Pass",
-            Type_Of_Closure: "Soft Closure",
+            Road_Closure: "Exercise checkpoint E",
+            Type_Of_Closure: "Illustrative checkpoint",
             Date_Of_Closure: "01/08/2025",
-            Directions: "East-side traffic control point",
+            Directions: "Fictional exercise point; no real access or route information",
         }),
     ],
 };
@@ -162,19 +164,19 @@ const fallbackCare = {
     type: "FeatureCollection",
     features: [
         pointFeature([-118.4455, 34.0701], {
-            NAME: "Westwood Recreation Center",
-            ADDRESS: "1350 S Sepulveda Blvd",
-            STATUS: "Mass care support",
+            NAME: "Exercise care site A",
+            ADDRESS: "Fictional exercise location",
+            STATUS: "Practice only; not an operating shelter",
         }),
         pointFeature([-118.5764, 34.1848], {
-            NAME: "Pierce College Support Site",
-            ADDRESS: "Woodland Hills",
-            STATUS: "Large-animal and community care support",
+            NAME: "Exercise care site B",
+            ADDRESS: "Fictional exercise location",
+            STATUS: "Practice only; not an operating shelter",
         }),
         pointFeature([-118.6217, 34.1714], {
-            NAME: "El Camino Real Charter Support Site",
-            ADDRESS: "Woodland Hills",
-            STATUS: "Community care support",
+            NAME: "Exercise care site C",
+            ADDRESS: "Fictional exercise location",
+            STATUS: "Practice only; not an operating shelter",
         }),
     ],
 };
@@ -217,7 +219,7 @@ async function setupMap() {
         map.getPane(name).style.zIndex = zIndex;
     });
 
-    map.attributionControl.addAttribution(
+    if (!PACKAGED_EXERCISE) map.attributionControl.addAttribution(
         "Basemap &copy; Esri, HERE, Garmin, USGS, EPA, NPS",
     );
 
@@ -263,6 +265,10 @@ async function setupMap() {
 
     function refreshBasemap() {
         map.invalidateSize();
+        if (PACKAGED_EXERCISE) {
+            document.getElementById("basemapStatus").textContent = "Offline exercise map";
+            return;
+        }
         const bounds = paddedBasemapBounds();
         if (!bounds.isValid()) return;
 
@@ -423,8 +429,16 @@ async function setupMap() {
         }
     }
 
+    async function loadExerciseSource(url, fallback, geometries) {
+        if (PACKAGED_EXERCISE) return {
+            data: fallback, provenance: "sample",
+            detail: "Built-in exercise data; not real incident information",
+        };
+        return CivicGuard.loadSource(url, fallback, geometries);
+    }
+
     async function loadPerimeter() {
-        const result = await CivicGuard.loadSource(SOURCES.palisadesPerimeter, fallbackPerimeter, ["Polygon", "MultiPolygon"]);
+        const result = await loadExerciseSource(SOURCES.palisadesPerimeter, fallbackPerimeter, ["Polygon", "MultiPolygon"]);
         layers.perimeter.clearLayers();
         L.geoJSON(result.data, {
             pane: "perimeterPane",
@@ -443,7 +457,7 @@ async function setupMap() {
     }
 
     async function loadRoadClosures() {
-        const result = await CivicGuard.loadSource(SOURCES.roadClosures, fallbackRoadClosures, ["Point"]);
+        const result = await loadExerciseSource(SOURCES.roadClosures, fallbackRoadClosures, ["Point"]);
         const data = { ...result.data, features: result.data.features.filter((feature) => pointInsideScenario(feature.geometry.coordinates)) };
         layers.closures.clearLayers();
         L.geoJSON(data, {
@@ -463,7 +477,7 @@ async function setupMap() {
     }
 
     async function loadCareSites() {
-        const result = await CivicGuard.loadSource(SOURCES.massCare, fallbackCare, ["Point"]);
+        const result = await loadExerciseSource(SOURCES.massCare, fallbackCare, ["Point"]);
         const data = { ...result.data, features: result.data.features.filter((feature) => pointInsideScenario(feature.geometry.coordinates)) };
         layers.care.clearLayers();
         L.geoJSON(data, {
@@ -521,10 +535,12 @@ async function setupMap() {
     fitAll();
     document.getElementById("lastUpdated").textContent = results.some((result) => result.status === "rejected")
         ? "Some map layers could not be rendered. Review source status before continuing."
-        : "Source requests completed. Remote data may be historical; sample data is illustrative. No live incident status is verified.";
+        : PACKAGED_EXERCISE ? "Offline exercise ready. All map layers are illustrative. Not for emergency use."
+            : "Source requests completed. Remote data may be historical; sample data is illustrative. No live incident status is verified.";
+    document.getElementById("sourceSummary").textContent = PACKAGED_EXERCISE ? "Built-in / offline" : "Mixed / see below";
 }
 
-function setupMessageComposer() {
+async function setupMessageComposer() {
     const textarea = document.getElementById("alertText");
     const charCount = document.getElementById("charCount");
     const state = document.getElementById("releaseState");
@@ -532,16 +548,94 @@ function setupMessageComposer() {
     const authority = document.getElementById("approvalStatus");
     const tabs = [...document.querySelectorAll(".tab")];
     const channels = [...document.querySelectorAll(".channel")];
+    const saveStatus = document.getElementById("draftSaveStatus");
+    const reset = document.getElementById("resetDraftsButton");
+    const confirmation = document.getElementById("resetDraftsConfirm");
+    const confirmReset = document.getElementById("confirmResetDraftsButton");
+    const cancelReset = document.getElementById("cancelResetDraftsButton");
+    const revise = document.getElementById("reviseButton");
+    const share = document.getElementById("shareExerciseButton");
+    const shareStatus = document.getElementById("shareStatus");
+    const defaultChannels = channels.filter((button) => button.getAttribute("aria-pressed") === "true")
+        .map((button) => button.textContent.trim());
     const drafts = { ...MESSAGES };
     let language = "en";
     let approved = false;
+    let busy = true;
+    let saveRevision = 0;
+    let preserveUnreadDrafts = false;
+    let store;
+    const unreadDraftWarning = "Changes in this window are not saved. Share or copy them before reopening to retry reading, or choose Reset all drafts to clear the saved copy and enable autosave.";
+
+    function setSaveStatus(status, message) {
+        saveStatus.dataset.state = status;
+        saveStatus.textContent = message;
+    }
+
+    function setBusy(value) {
+        busy = value;
+        [textarea, ...tabs, ...channels, reset, revise, share, confirmReset, cancelReset].forEach((control) => {
+            control.disabled = value;
+        });
+        updateState();
+    }
+
+    function snapshot() {
+        return {
+            drafts: { ...drafts }, language,
+            channels: channels.filter((button) => button.getAttribute("aria-pressed") === "true")
+                .map((button) => button.textContent.trim()),
+        };
+    }
+
+    function renderLanguage() {
+        textarea.value = drafts[language];
+        textarea.lang = language;
+        tabs.forEach((tab) => {
+            const selected = tab.dataset.lang === language;
+            tab.classList.toggle("active", selected);
+            tab.setAttribute("aria-selected", String(selected));
+            tab.tabIndex = selected ? 0 : -1;
+            if (selected) document.getElementById("messagePanel").setAttribute("aria-labelledby", tab.id);
+        });
+    }
+
+    function restore(snapshot) {
+        Object.assign(drafts, snapshot.drafts);
+        language = snapshot.language;
+        channels.forEach((button) => {
+            const active = snapshot.channels.includes(button.textContent.trim());
+            button.setAttribute("aria-pressed", String(active));
+            button.classList.toggle("active", active);
+        });
+        approved = false;
+        renderLanguage();
+    }
+
+    async function saveDrafts() {
+        const revision = ++saveRevision;
+        if (preserveUnreadDrafts) {
+            setSaveStatus("error", `Autosave is paused to protect saved drafts that could not be read. ${unreadDraftWarning}`);
+            return;
+        }
+        if (!store) {
+            setSaveStatus("error", "Autosave is unavailable. Keep this window open to retain your edits.");
+            return;
+        }
+        setSaveStatus("saving", "Saving… wait before closing.");
+        const result = await store.save(snapshot());
+        if (revision !== saveRevision) return;
+        if (result.status === "saved") setSaveStatus("saved", "Saved on this device.");
+        else if (result.status === "invalid") setSaveStatus("error", "Could not save: drafts exceed the per-language or total storage limit. Shorten the text and try again.");
+        else setSaveStatus("error", "Could not save on this device. Keep this window open to retain your edits; editing again will retry.");
+    }
 
     function updateState(reason) {
         if (reason) approved = false;
         const hasText = Boolean(textarea.value.trim());
         const hasChannel = channels.some((button) => button.getAttribute("aria-pressed") === "true");
         charCount.textContent = `${Array.from(textarea.value).length} chars`;
-        approve.disabled = approved || !hasText || !hasChannel;
+        approve.disabled = busy || approved || !hasText || !hasChannel;
         approve.textContent = approved ? "Simulation Approved" : "Approve Simulation";
         authority.textContent = approved ? "Approved in simulation" : "Pending simulation review";
         state.textContent = !hasText ? "Enter alert text before approving the simulation."
@@ -551,20 +645,14 @@ function setupMessageComposer() {
     }
 
     function selectLanguage(button) {
+        if (busy) return;
         const nextLanguage = button.dataset.lang;
         if (nextLanguage === language) return;
         drafts[language] = textarea.value;
         language = nextLanguage;
-        textarea.value = drafts[language];
-        textarea.lang = language;
-        tabs.forEach((tab) => {
-            const selected = tab === button;
-            tab.classList.toggle("active", selected);
-            tab.setAttribute("aria-selected", String(selected));
-            tab.tabIndex = selected ? 0 : -1;
-        });
-        document.getElementById("messagePanel").setAttribute("aria-labelledby", button.id);
+        renderLanguage();
         updateState("Language changed. Review this draft before approving the simulation.");
+        void saveDrafts();
     }
 
     tabs.forEach((button, index) => {
@@ -583,27 +671,101 @@ function setupMessageComposer() {
     });
 
     textarea.addEventListener("input", () => {
+        if (busy) return;
         drafts[language] = textarea.value;
         updateState("Draft changed. Review again before approving the simulation.");
+        void saveDrafts();
     });
     channels.forEach((button) => button.addEventListener("click", () => {
+        if (busy) return;
         const active = button.getAttribute("aria-pressed") !== "true";
         button.setAttribute("aria-pressed", String(active));
         button.classList.toggle("active", active);
         updateState("Channels changed. Review again before approving the simulation.");
+        void saveDrafts();
     }));
     approve.addEventListener("click", () => {
         if (approve.disabled) return;
         approved = true;
         updateState();
     });
-    document.getElementById("reviseButton").addEventListener("click", () => {
+    revise.addEventListener("click", () => {
         updateState("Review mode: edit the current language draft, then approve again.");
         textarea.focus();
     });
-    textarea.value = drafts[language];
-    textarea.lang = language;
-    updateState();
+    let sharing = false;
+    share.addEventListener("click", async () => {
+        if (busy || sharing) return;
+        sharing = true;
+        share.disabled = true;
+        try {
+            // Capture the current state synchronously, while the user gesture is active.
+            const text = CivicGuardExport.createSummary({ ...snapshot(), reviewed: approved });
+            const result = await CivicGuardExport.shareSummary({ text });
+            shareStatus.textContent = result.status === "shared" ? "Exercise summary shared using your chosen app."
+                : result.status === "downloaded" ? "Exercise summary downloaded as a text file."
+                    : result.status === "cancelled" ? "Sharing cancelled. Your drafts are unchanged."
+                        : "Sharing is unavailable. Your drafts remain on this device; copy important text before uninstalling.";
+        } catch {
+            shareStatus.textContent = "Could not create the exercise summary. Keep each language under 20,000 characters and try again.";
+        } finally {
+            sharing = false;
+            share.disabled = busy;
+        }
+    });
+    function closeConfirmation() {
+        confirmation.hidden = true;
+        reset.setAttribute("aria-expanded", "false");
+        reset.focus();
+    }
+    reset.addEventListener("click", () => {
+        confirmation.hidden = false;
+        reset.setAttribute("aria-expanded", "true");
+        cancelReset.focus();
+    });
+    cancelReset.addEventListener("click", closeConfirmation);
+    confirmation.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !busy) {
+            event.preventDefault();
+            closeConfirmation();
+        }
+    });
+    confirmReset.addEventListener("click", async () => {
+        ++saveRevision;
+        setBusy(true);
+        const result = store ? await store.clear() : { status: "unavailable" };
+        if (result.status === "cleared") {
+            preserveUnreadDrafts = false;
+            restore({ drafts: { ...MESSAGES }, language: "en", channels: defaultChannels });
+            setSaveStatus("empty", "Saved drafts cleared. New edits will save on this device.");
+        } else {
+            setSaveStatus("error", `Could not clear saved drafts. Your current edits are unchanged.${preserveUnreadDrafts ? ` ${unreadDraftWarning}` : ""}`);
+        }
+        setBusy(false);
+        closeConfirmation();
+    });
+
+    // Keep the editor locked until restoration completes so a late read cannot
+    // replace edits made while native storage is still loading.
+    setBusy(true);
+    let loaded = { status: "unavailable" };
+    try {
+        store = CivicGuardDraftStore.createStore(CivicGuardPlatform.createStorageBackend());
+        loaded = await store.load();
+    } catch {
+        // A missing or denied storage backend must not disable the composer.
+    }
+    preserveUnreadDrafts = loaded.status === "invalid" || loaded.status === "unavailable";
+    if (loaded.status === "restored") {
+        restore(loaded.snapshot);
+        setSaveStatus("saved", "Drafts restored from this device. Review before approving.");
+    } else {
+        renderLanguage();
+        if (loaded.status === "empty") setSaveStatus("empty", "Drafts save on this device as you edit.");
+        else if (loaded.status === "invalid") setSaveStatus("error", `Saved drafts could not be read. Original scenario text is shown. ${unreadDraftWarning}`);
+        else setSaveStatus("error", `Autosave is unavailable because saved drafts could not be read. ${unreadDraftWarning}`);
+    }
+    setBusy(false);
 }
 
 setupMessageComposer();

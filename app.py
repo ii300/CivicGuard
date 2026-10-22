@@ -49,7 +49,7 @@ def create_app(config=None):
     def public_asset(filename):
         return send_from_directory(BASE_DIR, filename)
 
-    for filename in ("index.html", "styles.css", "script.js", "console-core.js"):
+    for filename in ("index.html", "styles.css", "script.js", "console-core.js", "draft-store.js", "platform-storage.js", "exercise-export.js", "app-info.js"):
         app.add_url_rule(
             "/" + filename,
             endpoint=filename,

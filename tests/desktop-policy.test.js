@@ -33,15 +33,22 @@ test("navigation is confined to the bundled page and its fragments", () => {
     ]) assert.equal(isAppNavigation(value), false, String(value));
 });
 
-test("only the fixed HTTPS official map and attribution can reach the OS browser", () => {
+test("only the fixed HTTPS official map, attribution and support links can reach the OS browser", () => {
     const official = "https://experience.arcgis.com/experience/fedf0447f6c9485e804d1ac9b993632e/";
     assert.equal(trustedExternalUrl(official), official);
     assert.equal(trustedExternalUrl("https://leafletjs.com"), "https://leafletjs.com/");
+    assert.equal(trustedExternalUrl("https://github.com/ii300/CivicGuard/issues/new/choose"), "https://github.com/ii300/CivicGuard/issues/new/choose");
+    assert.equal(trustedExternalUrl("https://github.com/ii300/CivicGuard/issues"), "https://github.com/ii300/CivicGuard/issues");
     for (const value of [
         "http://leafletjs.com/", "https://leafletjs.com.evil.test/", "https://leafletjs.com@evil.test/",
         "https://user:password@leafletjs.com/", "https://leafletjs.com:8443/",
         "https://leafletjs.com/redirect?url=https://evil.test", "https://leafletjs.com/?redirect=1",
         "https://experience.arcgis.com/experience/another-map/", `${official}?redirect=1`,
+        "http://github.com/ii300/CivicGuard/issues", "https://github.com.evil.test/ii300/CivicGuard/issues",
+        "https://user:password@github.com/ii300/CivicGuard/issues", "https://github.com:8443/ii300/CivicGuard/issues",
+        "https://github.com/ii300/CivicGuard/issues?redirect=https://evil.test", "https://github.com/ii300/CivicGuard/issues#fragment",
+        "https://github.com/ii300/CivicGuard/issues/new", "https://github.com/ii300/CivicGuard/issues/new/choose/",
+        "https://github.com/ii300/CivicGuard", "https://github.com/other/CivicGuard/issues",
         "https://example.com/", "file:///Applications/Calculator.app", "javascript:alert(1)",
         "ms-settings:privacy", "mailto:test@example.com", "invalid", null,
     ]) assert.equal(trustedExternalUrl(value), null, String(value));

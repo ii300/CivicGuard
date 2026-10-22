@@ -100,9 +100,9 @@ jobs:
           compression-level: 0
 
   ios:
-    name: iOS simulator and unsigned device archive
+    name: iOS release archive, native UI checks, and screenshots
     runs-on: macos-15
-    timeout-minutes: 40
+    timeout-minutes: 60
     env:
       # The runner's default Xcode is older than Capacitor 8's requirement.
       DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
@@ -139,6 +139,24 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+      - name: Test native offline app and capture store screenshots
+        run: node scripts/ios-simulator-check.cjs
+      - name: Upload native iPhone and iPad screenshots
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: civicguard-ios-app-store-screenshots
+          path: release/ios/screenshots/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload native UI test evidence
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: civicguard-ios-native-ui-evidence
+          path: dist/ios-ui-*-attachments/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Compile unsigned device archive
         run: |
           xcodebuild -project ios/App/App.xcodeproj -scheme App \
