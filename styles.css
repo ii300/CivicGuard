@@ -743,3 +743,34 @@ h2 {
 .popup dd { margin: 0; overflow-wrap: anywhere; }
 button:disabled { cursor: default; opacity: 0.6; }
 button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+.workspace-nav { min-height: 64px; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 24px; background: #183e34; color: #fff; }
+.workspace-nav a { color: inherit; text-decoration: none; }
+.workspace-brand { font-size: 18px; font-weight: 800; }
+.workspace-brand span { font-size: 13px; font-weight: 400; color: #c8dad2; }
+.workspace-account { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+.account-name { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-account button, .account-cta { border: 1px solid #779b8a; border-radius: 6px; background: transparent; color: #fff; padding: 8px 12px; font: inherit; }
+.workspace-account form { margin: 0; }
+.console-page .app-shell { height: calc(100vh - 64px); }
+.workspace-storage { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 22px; }
+.workspace-storage h2 { margin-bottom: 8px; }
+.workspace-storage label { display: block; margin: 12px 0 6px; font-size: 14px; color: var(--muted); }
+.workspace-storage input, .workspace-storage select { width: 100%; min-width: 0; min-height: 42px; padding: 9px 12px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); }
+.workspace-storage select { appearance: none; padding-right: 32px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23526762' stroke-width='2'%3E%3Cpath d='m4 7 5 5 5-5'/%3E%3C/svg%3E") no-repeat right 10px center; }
+.save-draft-button { display: block; width: 100%; border: 0; border-radius: 6px; background: #245548; color: #fff; padding: 12px; margin-top: 12px; text-decoration: none; text-align: center; font-weight: 700; }
+.draft-controls { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.draft-controls button { border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; background: #fff; font-size: 14px; }
+.workspace-storage p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+#saveStatus { margin: 12px 0 0; font-size: 13px; }
+.console-page a:focus-visible, select:focus-visible { outline: 3px solid #2d6194; outline-offset: 3px; }
+@media (min-width: 761px) and (max-width: 1100px) {
+    .console-page .release-panel { top: 152px; max-height: calc(100vh - 172px); }
+}
+@media (max-width: 760px) {
+    .workspace-nav { padding: 12px 16px; }
+    .workspace-brand span { display: none; }
+    .workspace-account { gap: 10px; }
+    .account-name { display: none; }
+    .console-page .app-shell { height: auto; }
+}

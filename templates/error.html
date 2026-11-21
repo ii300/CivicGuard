@@ -1,0 +1,10 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ status }} — CivicGuard{% endblock %}
+{% block content %}
+<section class="error-page">
+    <p class="kicker">CivicGuard / {{ status }}</p>
+    <h1>{{ 'Page not found' if status == 404 else 'Let’s try again' }}</h1>
+    <p>{{ message }}</p>
+    <div class="hero-actions"><a class="button button-dark" href="/">Go home</a><a class="button button-outline" href="/login">Sign in</a></div>
+</section>
+{% endblock %}

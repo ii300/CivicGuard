@@ -3,7 +3,8 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>EmberGuard Alert Console</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}" />
+        <title>CivicGuard — Simulation Workspace</title>
         <link rel="preconnect" href="https://unpkg.com" />
         <link rel="preconnect" href="https://server.arcgisonline.com" />
         <link
@@ -14,7 +15,23 @@
         />
         <link rel="stylesheet" href="styles.css" />
     </head>
-    <body>
+    <body class="console-page">
+        <nav class="workspace-nav" aria-label="Account navigation">
+            <a href="/" class="workspace-brand">CivicGuard <span> / Simulation workspace</span></a>
+            <div class="workspace-account">
+                {% if current_user.is_authenticated %}
+                <span class="account-name">{{ current_user.name }}</span>
+                <a href="/account">Account</a>
+                <form action="/logout" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit">Sign out</button>
+                </form>
+                {% else %}
+                <a href="/login">Sign in</a>
+                <a class="account-cta" href="/register">Create account</a>
+                {% endif %}
+            </div>
+        </nav>
         <main class="app-shell">
             <aside class="incident-panel" aria-label="Incident briefing">
                 <header class="brand-row">
@@ -127,6 +144,31 @@
             </section>
 
             <aside class="release-panel" aria-label="Alert release controls">
+                <section class="workspace-storage" aria-label="Saved drafts">
+                    {% if current_user.is_authenticated and (current_user.email_verified or not config.EMAIL_VERIFICATION_REQUIRED) %}
+                    <div class="section-heading"><h2>My drafts</h2><button id="newDraftButton" type="button">New draft</button></div>
+                    <label for="draftTitle">Draft title</label>
+                    <input id="draftTitle" type="text" maxlength="100" value="Palisades simulation" />
+                    <button id="saveDraftButton" class="save-draft-button" type="button">Save draft</button>
+                    <div class="draft-controls"><button id="saveCopyButton" type="button">Save as new</button><button id="exportDraftButton" type="button">Export JSON</button></div>
+                    <label for="savedDraftSelect">Saved in your account</label>
+                    <select id="savedDraftSelect"><option value="">Loading saved drafts…</option></select>
+                    <div class="draft-controls">
+                        <button id="openDraftButton" type="button" disabled>Open</button>
+                        <button id="deleteDraftButton" type="button" disabled>Delete</button>
+                        <button id="refreshDraftsButton" type="button">Refresh list</button>
+                    </div>
+                    <p id="saveStatus" role="status">Save to keep your drafts across devices.</p>
+                    {% elif current_user.is_authenticated %}
+                    <h2>Verify your email to save.</h2>
+                    <p>Your account is ready. Confirm your email address to save and reopen your drafts on any device.</p>
+                    <a href="/verify-email" class="save-draft-button">Verify email</a>
+                    {% else %}
+                    <h2>Make this workspace yours.</h2>
+                    <p>Try the simulation, then create an account to save your multilingual drafts.</p>
+                    <a href="/register" class="save-draft-button">Create account</a>
+                    {% endif %}
+                </section>
                 <section class="release-header">
                     <p class="eyebrow">Simulation Composer</p>
                     <h2>Emergency Alert Draft</h2>
@@ -164,7 +206,7 @@
                         </div>
                     </div>
                     <div id="messagePanel" role="tabpanel" aria-labelledby="tab-en">
-                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount" lang="en"></textarea>
+                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount" lang="en" maxlength="4000"></textarea>
                     </div>
                     <div class="message-meta">
                         <span id="charCount">0 chars</span>
@@ -204,5 +246,6 @@
             crossorigin=""
         ></script>
         <script src="script.js"></script>
+        <script src="workspace.js"></script>
     </body>
 </html>

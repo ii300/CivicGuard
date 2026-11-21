@@ -1,0 +1,37 @@
+{% extends "templates/base.html" %}
+{% block title %}Account settings — CivicGuard{% endblock %}
+{% block content %}
+<section class="account-page">
+    <p class="kicker">Your account</p><h1>Settings &amp; security</h1>
+    {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+    <div class="account-sections">
+        <section class="auth-card"><h2>Profile</h2>
+            <p>{{ current_user.email }}<br><span class="field-hint">{{ 'Email verified' if current_user.email_verified else 'Email not yet verified' }}</span></p>
+            {% if not current_user.email_verified %}<p><a href="/verify-email">Verify your email</a></p>{% endif %}
+            <form method="post" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="profile">
+                <label for="name">Name</label><input id="name" name="name" autocomplete="name" maxlength="80" value="{{ current_user.name }}" required>
+                <button class="button button-dark" type="submit">Save profile</button>
+            </form>
+        </section>
+        <section class="auth-card"><h2>Change password</h2><p class="form-description">This signs out all your devices, including this one.</p>
+            <form method="post" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="password">
+                <label for="current_password">Current password</label><input id="current_password" name="current_password" type="password" autocomplete="current-password" maxlength="128" required>
+                <label for="password">New password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <label for="confirm_password">Confirm new password</label><input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+                <button class="button button-dark" type="submit">Change password</button>
+            </form>
+        </section>
+        <section class="auth-card"><h2>Your data</h2><p>Download your profile and saved simulation drafts as a JSON file.</p><a class="button button-outline" href="/account/export">Download my data</a></section>
+        <section class="auth-card danger-card"><h2>Delete account</h2><p>Delete your account and all its saved drafts. This cannot be undone. Download your data first if you want a copy.</p>
+            <form method="post" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="delete">
+                <label for="delete_password">Current password to delete account</label><input id="delete_password" name="current_password" type="password" autocomplete="current-password" maxlength="128" required>
+                <label for="confirmation">Type DELETE to confirm</label><input id="confirmation" name="confirmation" autocomplete="off" pattern="DELETE" required>
+                <button class="button button-orange" type="submit">Permanently delete account</button>
+            </form>
+        </section>
+    </div>
+</section>
+{% endblock %}

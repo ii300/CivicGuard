@@ -60,7 +60,7 @@ async function mockNetwork(page, { failSources = false, blockLeaflet = false, da
 
 async function openConsole(page, options) {
     await mockNetwork(page, options);
-    await page.goto("/");
+    await page.goto("/demo");
     await expect(page.getByRole("textbox", { name: "Alert text", exact: true })).not.toHaveValue("");
     for (const id of sourceIds) {
         await expect(page.locator(`#${id}`)).not.toContainText("Loading");

@@ -1,0 +1,19 @@
+{% extends "templates/base.html" %}
+{% block title %}Reset your password — CivicGuard{% endblock %}
+{% block content %}
+<section class="single-card auth-card">
+    <p class="kicker">Account recovery</p><h1>Forgot your password?</h1>
+    {% if sent %}
+    <p class="flash-message success" role="status">If an account uses that address, a reset link will be sent. Check your inbox and spam folder. The link expires in 30 minutes.</p>
+    {% else %}
+    <p class="form-description">Enter your email and we will send you a link to choose a new password.</p>
+    {% endif %}
+    <form method="post" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required>
+        <button class="button button-orange" type="submit">Send reset link</button>
+    </form>
+    <p class="auth-switch"><a href="/login">Back to sign in</a></p>
+</section>
+{% endblock %}

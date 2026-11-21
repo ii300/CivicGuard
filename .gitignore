@@ -5,9 +5,14 @@
 __pycache__/
 *.py[cod]
 *.db
+*.db-*
+*.sqlite*
+.env.bak
 node_modules/
 test-results/
 playwright-report/
 .playwright-cli/
 output/
 .DS_Store
+instance/
+release/

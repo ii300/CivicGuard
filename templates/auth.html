@@ -1,0 +1,38 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ 'Create an account' if mode == 'register' else 'Sign in' }} — CivicGuard{% endblock %}
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-intro">
+        <p class="kicker">Your community. Your preparation.</p>
+        <h1>{{ 'Good preparation starts here.' if mode == 'register' else 'Pick up where you left off.' }}</h1>
+        <p>Your maps, your multilingual drafts, and room to think through the next step.</p>
+        <a href="/demo">Take a look at the demo</a>
+        <div class="auth-detail"><span>01 / EXPLORE</span><span>02 / DRAFT</span><span>03 / REVIEW</span></div>
+    </div>
+    <div class="auth-card">
+        <p class="kicker">CivicGuard workspace</p>
+        <h2>{{ 'Create your account' if mode == 'register' else 'Welcome back' }}</h2>
+        <p class="form-description">{{ 'Save your simulation drafts in your own workspace.' if mode == 'register' else 'Sign in to open your saved drafts.' }}</p>
+        {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+        <form method="post" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if mode == 'register' %}
+            <label for="name">Name</label>
+            <input id="name" name="name" autocomplete="name" maxlength="80" required value="{{ request.form.get('name', '') }}">
+            {% endif %}
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required value="{{ request.form.get('email', '') }}">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" {% if mode == 'register' %}minlength="12" aria-describedby="passwordHint"{% endif %} maxlength="128" required>
+            {% if mode == 'register' %}
+            <p id="passwordHint" class="field-hint">12–128 characters. A memorable passphrase works well.</p>
+            <label for="confirm_password">Confirm password</label>
+            <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+            {% endif %}
+            <button class="button button-orange" type="submit">{{ 'Create account' if mode == 'register' else 'Sign in' }}</button>
+        </form>
+        {% if mode == 'login' %}<p class="auth-switch"><a href="/forgot-password">Forgot your password?</a></p>{% endif %}
+        <p class="auth-switch">{% if mode == 'register' %}Already have an account? <a href="/login">Sign in</a>{% else %}New to CivicGuard? <a href="/register">Create an account</a>{% endif %}</p>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "templates/base.html" %}
+{% block title %}Verify your email — CivicGuard{% endblock %}
+{% block content %}
+<section class="single-card auth-card">
+    <p class="kicker">One more step</p>
+    <h1>Check your inbox.</h1>
+    <p>We sent a verification link to <strong>{{ current_user.email }}</strong>. Open it and confirm your email to start saving drafts.</p>
+    <p class="form-description">The link expires in 24 hours. If it is missing, check your spam folder or request another email below.</p>
+    <form action="/verify-email/resend" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button button-dark" type="submit">Resend verification email</button>
+    </form>
+    {% if config.APP_ENV == 'development' and config.MAIL_BACKEND == 'file' %}
+    <p class="development-note">Local development: messages stay on this computer. <a href="/dev/email-preview">Open email preview</a>.</p>
+    {% endif %}
+    <p class="auth-switch"><a href="/demo">Explore the demo while you wait</a></p>
+</section>
+{% endblock %}

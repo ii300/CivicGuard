@@ -548,6 +548,19 @@ function setupMessageComposer() {
             : !hasChannel ? "Select at least one simulated channel."
             : approved ? "Approved in simulation. No public alerts have been sent."
             : reason || "Simulation only. Review each language draft separately; no public alerts are sent.";
+        document.dispatchEvent(new Event("composerchange"));
+    }
+
+    function renderLanguage() {
+        textarea.value = drafts[language];
+        textarea.lang = language;
+        tabs.forEach((tab) => {
+            const selected = tab.dataset.lang === language;
+            tab.classList.toggle("active", selected);
+            tab.setAttribute("aria-selected", String(selected));
+            tab.tabIndex = selected ? 0 : -1;
+        });
+        document.getElementById("messagePanel").setAttribute("aria-labelledby", `tab-${language}`);
     }
 
     function selectLanguage(button) {
@@ -555,15 +568,7 @@ function setupMessageComposer() {
         if (nextLanguage === language) return;
         drafts[language] = textarea.value;
         language = nextLanguage;
-        textarea.value = drafts[language];
-        textarea.lang = language;
-        tabs.forEach((tab) => {
-            const selected = tab === button;
-            tab.classList.toggle("active", selected);
-            tab.setAttribute("aria-selected", String(selected));
-            tab.tabIndex = selected ? 0 : -1;
-        });
-        document.getElementById("messagePanel").setAttribute("aria-labelledby", button.id);
+        renderLanguage();
         updateState("Language changed. Review this draft before approving the simulation.");
     }
 
@@ -604,6 +609,28 @@ function setupMessageComposer() {
     textarea.value = drafts[language];
     textarea.lang = language;
     updateState();
+    CivicGuard.composer = {
+        snapshot() {
+            drafts[language] = textarea.value;
+            return {
+                messages: { ...drafts },
+                language,
+                channels: channels.filter((button) => button.getAttribute("aria-pressed") === "true")
+                    .map((button) => button.textContent.trim()),
+            };
+        },
+        load(snapshot = { messages: MESSAGES, language: "en", channels: ["WEA", "EAS", "SMS"] }) {
+            Object.assign(drafts, snapshot.messages);
+            language = snapshot.language;
+            channels.forEach((button) => {
+                const active = snapshot.channels.includes(button.textContent.trim());
+                button.setAttribute("aria-pressed", String(active));
+                button.classList.toggle("active", active);
+            });
+            renderLanguage();
+            updateState("Draft opened. Review again before approving the simulation.");
+        },
+    };
 }
 
 setupMessageComposer();
