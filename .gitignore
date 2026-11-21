@@ -14,5 +14,6 @@ playwright-report/
 .playwright-cli/
 output/
 .DS_Store
+.Rhistory
 instance/
 release/
