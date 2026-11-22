@@ -405,7 +405,7 @@ test("intentionally blank saved drafts and no channels stay blank after restorat
         drafts: { en: '', es: '', zh: '' }, language: 'es', channels: [],
     })));
     await mockNetwork(page);
-    await page.goto('/');
+    await page.goto('/demo');
     await expect(page.locator('#draftSaveStatus')).toContainText('Drafts restored');
     await expect(page.locator('#alertText')).toHaveValue('');
     await expect(page.getByRole('tab', { name: 'ES', exact: true })).toHaveAttribute('aria-selected', 'true');
