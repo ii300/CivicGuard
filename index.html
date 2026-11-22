@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="csrf-token" content="{{ csrf_token() }}" />
         <title>CivicGuard — Simulation Workspace</title>
         <link rel="preconnect" href="https://unpkg.com" />
@@ -33,10 +33,10 @@
             </div>
         </nav>
         <main class="app-shell">
-            <aside class="incident-panel" aria-label="Incident briefing">
+            <aside id="incidentPanel" class="incident-panel" aria-label="Incident briefing">
                 <header class="brand-row">
                     <div>
-                        <p class="eyebrow">CivicGuard / EmberGuard</p>
+                        <p class="eyebrow">CivicGuard Exercise</p>
                         <h1>Palisades Fire Simulation</h1>
                     </div>
                     <span class="live-pill">Simulation</span>
@@ -45,12 +45,13 @@
                 <section class="status-card order">
                     <div class="card-topline">
                         <span>Simulation Draft</span>
-                        <strong>HIGH</strong>
+                        <strong>EXERCISE</strong>
                     </div>
                     <p>
                         Historical scenario inspired by the January 2025 Palisades
                         fire. Evacuation zones are illustrative. This console
                         does not verify current conditions or send alerts.
+                        For practice only. Not for emergency use.
                     </p>
                 </section>
 
@@ -69,7 +70,7 @@
                     </div>
                     <div>
                         <span>Source</span>
-                        <strong>Mixed / see below</strong>
+                        <strong id="sourceSummary">See source status</strong>
                     </div>
                 </section>
 
@@ -116,9 +117,10 @@
                         <li>Approve the simulation</li>
                     </ol>
                 </section>
+                <section id="appInfo" class="app-info" aria-label="About, privacy and support"></section>
             </aside>
 
-            <section class="map-stage" aria-label="Wildfire evacuation map">
+            <section id="mapStage" class="map-stage" aria-label="Wildfire evacuation map">
                 <div id="map"></div>
                 <div class="map-banner">
                     <div>
@@ -143,7 +145,7 @@
                 </div>
             </section>
 
-            <aside class="release-panel" aria-label="Alert release controls">
+            <aside id="releasePanel" class="release-panel" aria-label="Alert release controls">
                 <section class="workspace-storage" aria-label="Saved drafts">
                     {% if current_user.is_authenticated and (current_user.email_verified or not config.EMAIL_VERIFICATION_REQUIRED) %}
                     <div class="section-heading"><h2>My drafts</h2><button id="newDraftButton" type="button">New draft</button></div>
@@ -171,7 +173,7 @@
                 </section>
                 <section class="release-header">
                     <p class="eyebrow">Simulation Composer</p>
-                    <h2>Emergency Alert Draft</h2>
+                    <h2>Exercise Message</h2>
                     <p id="lastUpdated">Loading source data...</p>
                 </section>
 
@@ -206,11 +208,20 @@
                         </div>
                     </div>
                     <div id="messagePanel" role="tabpanel" aria-labelledby="tab-en">
-                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount" lang="en" maxlength="4000"></textarea>
+                        <textarea id="alertText" aria-label="Alert text" aria-describedby="charCount draftSaveStatus" maxlength="20000" lang="en"></textarea>
                     </div>
                     <div class="message-meta">
                         <span id="charCount">0 chars</span>
                         <span>Simulation draft only</span>
+                    </div>
+                    <div class="draft-storage">
+                        <p id="draftSaveStatus" role="status" data-state="loading">Loading saved drafts…</p>
+                        <button id="resetDraftsButton" type="button" aria-controls="resetDraftsConfirm" aria-expanded="false">Reset drafts</button>
+                    </div>
+                    <div id="resetDraftsConfirm" class="draft-reset-confirm" role="group" aria-labelledby="resetDraftsPrompt" hidden>
+                        <p id="resetDraftsPrompt">Replace all three language drafts and channel choices with the original scenario? This clears your saved edits on this device.</p>
+                        <button id="cancelResetDraftsButton" type="button">Keep my drafts</button>
+                        <button id="confirmResetDraftsButton" type="button">Reset all drafts</button>
                     </div>
                 </section>
 
@@ -231,15 +242,27 @@
                     <button id="reviseButton" class="secondary-action" type="button">
                         Review Alert Text
                     </button>
+                    <button id="shareExerciseButton" class="secondary-action" type="button" disabled>Share exercise summary</button>
+                    <p id="shareStatus" role="status">Exports are always labeled as exercises. Choose a recipient only if you intend to share.</p>
                     <p id="releaseState" role="status">
-                        This is a mock interface. It does not send public alerts.
+                        Exercise only. No public alerts have been sent.
                     </p>
                 </section>
             </aside>
         </main>
 
+        <nav class="mobile-navigation" aria-label="Console sections">
+            <a href="#incidentPanel">Briefing</a>
+            <a href="#mapStage">Map</a>
+            <a href="#releasePanel">Draft</a>
+        </nav>
+
         <noscript>This simulation requires JavaScript for its map and message composer.</noscript>
         <script src="console-core.js"></script>
+        <script src="draft-store.js"></script>
+        <script src="platform-storage.js"></script>
+        <script src="exercise-export.js"></script>
+        <script src="app-info.js"></script>
         <script
             src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="

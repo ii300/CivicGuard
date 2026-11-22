@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CivicGuard</string>
+    <string name="title_activity_main">CivicGuard</string>
+    <string name="package_name">io.github.ii300.civicguard</string>
+    <string name="custom_url_scheme">io.github.ii300.civicguard</string>
+</resources>

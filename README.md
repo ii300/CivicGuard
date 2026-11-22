@@ -1,15 +1,29 @@
 # CivicGuard / EmberGuard
 
-A complete Flask website for wildfire **simulation** and multilingual draft review.
-Public homepage and demo, verified email accounts, password recovery, and private
-workspaces that persist across devices. It does not send public emergency alerts.
+A complete Flask website and multi-platform app for wildfire **simulation** and
+multilingual draft review. Includes a public homepage and demo, verified email
+accounts, password recovery, and private workspaces that persist across devices,
+plus offline Electron desktop and Capacitor mobile wrappers. It does not send
+public emergency alerts.
 
-中文上线步骤：[DEPLOYMENT.md](DEPLOYMENT.md)。
+中文上线步骤：[DEPLOYMENT.md](DEPLOYMENT.md)。See [RELEASE_STATUS.md](RELEASE_STATUS.md) for
+verified results and remaining publishing steps.
 
-Publish the changed source to a GitHub branch, then create a Render Blueprint from
-that branch. It creates a paid web service and PostgreSQL after you review the
-estimate and enter SMTP settings. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for
-verified results and the remaining publishing steps. No live site has been created.
+## Desktop and mobile apps
+
+The same console also has Electron wrappers for **Windows and macOS** and Capacitor
+projects for **iOS and Android**. App bundles include the UI and Leaflet; they do
+not need Python, an API key, or a running web server. Packaged apps use built-in
+illustrative exercise data and make no automatic external network requests.
+
+```sh
+npm ci
+npm run desktop:dev
+```
+
+See [the platform build and installation guide](docs/PLATFORMS.md) and
+[the App Store submission checklist](docs/app-store/README.zh-CN.md) for platform
+packaging, signing, and store preparation.
 
 ## Run locally
 
@@ -32,6 +46,10 @@ Local registration saves emails privately on this computer. On the verification
 page, select **Open email preview → Open account link → Verify email**. These
 previews are available only to the signed-in account from loopback in development.
 Production uses TLS SMTP and disables local previews. Tests use memory/mock mail.
+
+In the offline desktop/mobile apps and public `/demo` page, edits autosave locally
+on the current device (Capacitor Preferences on iOS/Android, localStorage in browsers)
+and can be reset or exported via the share summary.
 
 ## Account and workspace features
 
@@ -124,17 +142,12 @@ timeout without retries. Incomplete output is not stored. Provider charges may a
 python -m unittest discover -s tests -p 'test_*.py' -v
 npm ci
 npm test
-npx playwright install chromium
+npx playwright install chromium webkit
 PYTHON="$PWD/.venv/bin/python" npm run test:browser
+npm run test:packaged
 ```
 
 GitHub Actions installs production dependencies and runs backend tests, disposable
-PostgreSQL integration tests, JavaScript unit tests, and Chromium browser tests.
-Browser coverage includes registration and verification, multilingual saving, two
-independent browser sessions, conflict recovery, password reset, mobile layout,
-map failures, keyboard controls, and account isolation. No test sends real email,
-public alerts, or live AI requests. Browser tests use their own temporary database.
-
-PostgreSQL tests run only when `CIVICGUARD_TEST_DATABASE_URL` points to a disposable
-test database; never set it to production. Local browser checks require permission
-to bind port 5055 and launch Chromium. See the CI run for the actual result.
+PostgreSQL integration tests, JavaScript unit tests, Chromium browser tests (including
+accounts and multi-session conflict flows), and packaged Web tests in Chromium/WebKit.
+Platform builds compile the native iOS/Android projects and Electron desktop apps.

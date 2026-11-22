@@ -128,7 +128,7 @@ def create_app(config=None):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         if request.path.startswith(("/verify-email/", "/reset-password/", "/dev/")):
-            response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["Referrer-Policy"] = "same-origin"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self' https://unpkg.com; "
             "style-src 'self' 'unsafe-inline' https://unpkg.com; "
@@ -176,7 +176,7 @@ def create_app(config=None):
     def public_asset(filename):
         return send_from_directory(BASE_DIR, filename)
 
-    for filename in ("styles.css", "script.js", "console-core.js", "website.css", "workspace.js"):
+    for filename in ("styles.css", "script.js", "console-core.js", "website.css", "workspace.js", "draft-store.js", "platform-storage.js", "exercise-export.js", "app-info.js"):
         app.add_url_rule(
             "/" + filename,
             endpoint=filename,

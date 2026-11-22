@@ -1,0 +1,16 @@
+{
+  "appId": "io.github.ii300.civicguard",
+  "appName": "CivicGuard",
+  "webDir": "dist/web",
+  "backgroundColor": "#f6f4ef",
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "LIGHT",
+      "hidden": false
+    }
+  }
+}

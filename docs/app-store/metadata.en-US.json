@@ -1,0 +1,11 @@
+{
+  "name": "CivicGuard Exercise",
+  "subtitle": "Offline alert message practice",
+  "primaryCategory": "EDUCATION",
+  "primaryLanguage": "en-US",
+  "keywords": "wildfire,exercise,tabletop,communication,training,message,preparedness,offline",
+  "promotionalText": "Practice a wildfire communication exercise offline. Review illustrative map layers, edit three language drafts, and share a clearly labeled exercise summary.",
+  "description": "Practice wildfire communication in a focused offline tabletop exercise. CivicGuard Exercise combines an illustrative historical scenario, a map and a message workspace for English, Spanish and Chinese.\n\nWORK THROUGH AN EXERCISE\n• Inspect the scenario map and toggle its illustrative layers.\n• Edit each language draft separately.\n• Choose simulated communication channels and approve your work within the exercise.\n• Return to drafts saved on your device.\n• Share an exercise summary with all three drafts through your device’s share options. Every summary is labeled SIMULATION ONLY.\n\nThe packaged app works without an account, server or internet connection. No advertisements, analytics or tracking are included. Support and external information links require a connection.\n\nTRAINING PURPOSE\nThe historical setting is inspired by the January 2025 Palisades fire. The exercise zones, checkpoints and care points are illustrative. CivicGuard does not verify current conditions, provide evacuation routes, send public alerts or represent an emergency authority. Use verified local authority information during an actual emergency.\n\nDrafts remain on your device unless you choose to share them. Device backups may include app data according to your system settings. Use Reset drafts to clear saved exercise edits. The interface and help are in English; editable example drafts are provided in English, Spanish and Chinese.",
+  "supportURL": "https://github.com/ii300/CivicGuard/blob/codex/durable-drafts/docs/app-store/support.md",
+  "privacyPolicyURL": "https://github.com/ii300/CivicGuard/blob/codex/durable-drafts/docs/app-store/privacy.md"
+}
