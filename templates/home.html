@@ -1,0 +1,40 @@
+{% extends "templates/base.html" %}
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <p class="kicker"><span></span>Wildfire preparedness, together</p>
+        <h1>A clearer picture.<br>A better prepared<br><em>community.</em></h1>
+        <p class="hero-description">Explore a wildfire scenario, work through the details, and turn your plan into a clear message. One workspace for maps and multilingual simulation drafts.</p>
+        <div class="hero-actions">
+            <a class="button button-orange" href="{{ '/console' if current_user.is_authenticated else '/register' }}">{{ 'Open my workspace' if current_user.is_authenticated else 'Create your free account' }}</a>
+            <a class="button button-outline" href="/demo">Explore the demo</a>
+        </div>
+        <p class="hero-note">Save your work. Return when you are ready.</p>
+    </div>
+    <div class="scenario-preview" aria-label="Illustrative wildfire planning preview">
+        <div class="preview-top"><span>THE PLANNING ROOM</span><span class="scenario-label">Simulation</span></div>
+        <div class="preview-map">
+            <svg viewBox="0 0 540 380" role="img" aria-label="Illustrative terrain with a sample scenario zone; not a real evacuation map">
+                <defs><pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="#36504d" stroke-width=".7"/></pattern></defs>
+                <rect width="540" height="380" fill="#193731"/>
+                <rect width="540" height="380" fill="url(#grid)"/>
+                <g fill="none" stroke="#47635b" stroke-width="1.5"><path d="M-30 90Q120-60 250 95T600 40M-30 125Q120-25 250 130T600 75M-30 160Q120 10 250 165T600 110M-30 195Q120 45 250 200T600 145M-30 230Q120 80 250 235T600 180M-30 265Q120 115 250 270T600 215M-30 300Q120 150 250 305T600 250M-30 335Q120 185 250 340T600 285"/></g>
+                <path d="M0 325Q90 285 150 310T300 350L540 370V380H0Z" fill="#264e58"/>
+                <path d="M65 30L165 125 250 185 410 90M165 125L135 280 300 350M250 185L330 280 520 285" fill="none" stroke="#8aa198" stroke-width="3"/>
+                <path d="M180 90L275 70 355 122 320 220 235 250 150 180Z" fill="#e27b3d" fill-opacity=".25" stroke="#f6a667" stroke-width="2" stroke-dasharray="6 5"/>
+                <path d="M230 115L280 105 310 150 278 200 215 188 198 150Z" fill="#e46547" fill-opacity=".65" stroke="#ffb5a1" stroke-width="2"/>
+                <circle cx="250" cy="157" r="7" fill="#fff"/><circle cx="250" cy="157" r="16" fill="none" stroke="#fff" opacity=".4"/>
+                <circle cx="335" cy="285" r="8" fill="#8bd1b4" stroke="#193731" stroke-width="3"/>
+            </svg>
+            <div class="map-caption"><span>SCENARIO / 01</span><strong>Palisades, California</strong><small>January 2025 · illustrative geometry</small></div>
+        </div>
+        <div class="preview-draft"><span class="draft-mark" aria-hidden="true">Aa</span><div><strong>One plan. More people reached.</strong><p>English · Español · 中文</p></div><span class="saved-label">Your drafts</span></div>
+    </div>
+</section>
+<section class="feature-strip" aria-label="Workspace features">
+    <article><span class="feature-label">Understand the scenario</span><h2>See the context.</h2><p>Explore map layers and inspect where each source comes from before drafting a message.</p></article>
+    <article><span class="feature-label">Make the message clear</span><h2>Write for your community.</h2><p>Edit English, Spanish, and Chinese drafts independently, then practice a review.</p></article>
+    <article><span class="feature-label">Keep your progress</span><h2>A workspace of your own.</h2><p>Save drafts to your account and return to them on another device.</p></article>
+</section>
+<section class="scenario-note"><strong>Built for learning and rehearsal.</strong><p>This demonstration uses a historical scenario and illustrative zones. It does not verify current conditions, issue evacuation orders, or deliver emergency alerts.</p></section>
+{% endblock %}

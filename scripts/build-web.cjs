@@ -23,6 +23,11 @@ async function buildWeb(output = path.join(root, 'dist', 'web')) {
         await fs.copyFile(path.join(root, filename), path.join(output, filename));
     }
     let html = await fs.readFile(path.join(output, 'index.html'), 'utf8');
+    html = html.replace(/\s*<meta name="csrf-token"[^>]*\/>/, '');
+    html = html.replace(/<body class="console-page">/, '<body>');
+    html = html.replace(/\s*<nav class="workspace-nav"[\s\S]*?<\/nav>/, '');
+    html = html.replace(/\s*<section class="workspace-storage"[\s\S]*?<\/section>/, '');
+    html = html.replace(/\s*<script src="workspace\.js"><\/script>/, '');
     html = html.replace(/\s*<link rel="preconnect" href="https:\/\/unpkg.com"\s*\/>/, '');
     html = html.replace(/\s*<link rel="preconnect" href="https:\/\/server.arcgisonline.com"\s*\/>/, '');
     html = html.replace(/<link\s+rel="stylesheet"\s+href="https:\/\/unpkg.com\/leaflet@1\.9\.4\/dist\/leaflet\.css"[\s\S]*?\/>/, '<link rel="stylesheet" href="vendor/leaflet/leaflet.css" />');

@@ -1,0 +1,23 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ 'Help' if page == 'help' else 'Privacy' }} — CivicGuard{% endblock %}
+{% block content %}
+<article class="info-page">
+{% if page == 'help' %}
+    <p class="kicker">Using your workspace</p><h1>From scenario to saved draft.</h1>
+    <h2>Get started</h2><p>Create an account, open the verification email, and confirm your address. Sign in to open your workspace. You can explore the demo without an account.</p>
+    <h2>Save your work</h2><p>Edit the language drafts independently. Give your draft a title and select Save draft. To return to it, choose it from Saved in your account and select Open. Save changes updates that draft; Save as new keeps a separate copy.</p>
+    <h2>Avoid losing edits</h2><p>Saving is manual. The page warns before leaving with unsaved changes. If the connection fails, your edits stay in the page. Export JSON or copy the text before closing. If another tab saved a newer version, open that version or save your work as a new draft.</p>
+    <h2>Understand the map</h2><p>Remote means a public source responded, not that its contents are current. Sample data is illustrative fallback content. The scenario zones are not official evacuation boundaries. You can still edit drafts if map services fail.</p>
+    <h2>Manage your account</h2><p>Use Account to change your name or password, download your saved data, or delete your account. Forgotten passwords can be reset with an email link from the sign-in page.</p>
+    <h2>What approval means</h2><p>Approve Simulation only changes this practice interface. It sends no public alert and grants no official authority. Opening or editing a draft requires another review.</p>
+{% else %}
+    <p class="kicker">Your data in this application</p><h1>Privacy &amp; data</h1>
+    <h2>Account and workspace data</h2><p>CivicGuard stores your name, normalized email address, password hash, email verification state, and saved simulation drafts. It also stores expiring session records, single-use account-link digests, and rate-limit counters. Plaintext passwords are not stored.</p>
+    <h2>How data is used</h2><p>Accounts keep drafts private and let you return on another device. Account emails verify addresses and recover passwords. This application does not send marketing messages or public emergency alerts.</p>
+    <h2>External services</h2><p>Your browser contacts the Leaflet CDN and ArcGIS map services to display the map. These services receive ordinary connection information, such as your IP address. The website host and configured email provider process requests and account emails to operate the service. If the optional AI API is used, the submitted area and severity are sent to Anthropic; the normal composer uses local templates.</p>
+    <h2>Cookies and retention</h2><p>A necessary session cookie supports sign-in and protects forms. Signed-in sessions expire after 12 hours. Verification links expire in 24 hours and password reset links in 30 minutes. Your profile and drafts remain until you delete them or your account. Hosting logs and backup copies follow the hosting provider’s retention settings.</p>
+    <h2>Control your data</h2><p>Download your profile and drafts or delete your account from Account settings. Deletion removes your account, drafts, login sessions, and account tokens from the active database. Messages already delivered to your email inbox and provider backups are outside the application’s active database.</p>
+    <p>This is a simulation workspace. Avoid putting sensitive personal information into practice drafts.</p>
+{% endif %}
+</article>
+{% endblock %}

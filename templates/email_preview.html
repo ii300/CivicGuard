@@ -1,0 +1,10 @@
+{% extends "templates/base.html" %}
+{% block title %}Local email preview — CivicGuard{% endblock %}
+{% block content %}
+<section class="single-card auth-card">
+    <p class="kicker">Local development only</p><h1>{{ subject }}</h1>
+    <p class="development-note">This message was saved locally. No email was sent. This preview is disabled in production.</p>
+    <pre class="email-body">{{ body }}</pre>
+    {% if link %}<a class="button button-dark" href="{{ link }}">Open account link</a>{% endif %}
+</section>
+{% endblock %}

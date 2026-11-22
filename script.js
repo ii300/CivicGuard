@@ -564,6 +564,7 @@ async function setupMessageComposer() {
     let busy = true;
     let saveRevision = 0;
     let preserveUnreadDrafts = false;
+    const ACCOUNT_WORKSPACE = Boolean(document.getElementById("saveDraftButton"));
     let store;
     const unreadDraftWarning = "Changes in this window are not saved. Share or copy them before reopening to retry reading, or choose Reset all drafts to clear the saved copy and enable autosave.";
 
@@ -613,6 +614,7 @@ async function setupMessageComposer() {
     }
 
     async function saveDrafts() {
+        if (ACCOUNT_WORKSPACE) return;
         const revision = ++saveRevision;
         if (preserveUnreadDrafts) {
             setSaveStatus("error", `Autosave is paused to protect saved drafts that could not be read. ${unreadDraftWarning}`);
@@ -642,7 +644,9 @@ async function setupMessageComposer() {
             : !hasChannel ? "Select at least one simulated channel."
             : approved ? "Approved in simulation. No public alerts have been sent."
             : reason || "Simulation only. Review each language draft separately; no public alerts are sent.";
+        document.dispatchEvent(new Event("composerchange"));
     }
+
 
     function selectLanguage(button) {
         if (busy) return;
@@ -693,6 +697,28 @@ async function setupMessageComposer() {
         updateState("Review mode: edit the current language draft, then approve again.");
         textarea.focus();
     });
+    CivicGuard.composer = {
+        snapshot() {
+            drafts[language] = textarea.value;
+            return {
+                messages: { ...drafts },
+                language,
+                channels: channels.filter((button) => button.getAttribute("aria-pressed") === "true")
+                    .map((button) => button.textContent.trim()),
+            };
+        },
+        load(next = { messages: MESSAGES, language: "en", channels: ["WEA", "EAS", "SMS"] }) {
+            Object.assign(drafts, next.messages);
+            language = next.language;
+            channels.forEach((button) => {
+                const active = next.channels.includes(button.textContent.trim());
+                button.setAttribute("aria-pressed", String(active));
+                button.classList.toggle("active", active);
+            });
+            renderLanguage();
+            updateState("Draft opened. Review again before approving the simulation.");
+        },
+    };
     let sharing = false;
     share.addEventListener("click", async () => {
         if (busy || sharing) return;
@@ -732,6 +758,12 @@ async function setupMessageComposer() {
     });
     confirmReset.addEventListener("click", async () => {
         ++saveRevision;
+        if (ACCOUNT_WORKSPACE) {
+            restore({ drafts: { ...MESSAGES }, language: "en", channels: defaultChannels });
+            updateState("Drafts reset to original scenario. Click Save draft to store changes.");
+            closeConfirmation();
+            return;
+        }
         setBusy(true);
         const result = store ? await store.clear() : { status: "unavailable" };
         if (result.status === "cleared") {
@@ -744,6 +776,13 @@ async function setupMessageComposer() {
         setBusy(false);
         closeConfirmation();
     });
+
+    if (ACCOUNT_WORKSPACE) {
+        renderLanguage();
+        setSaveStatus("empty", "Drafts save to your account when you click Save draft.");
+        setBusy(false);
+        return;
+    }
 
     // Keep the editor locked until restoration completes so a late read cannot
     // replace edits made while native storage is still loading.

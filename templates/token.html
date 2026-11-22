@@ -1,0 +1,25 @@
+{% extends "templates/base.html" %}
+{% block title %}{{ 'Verify email' if purpose == 'verify' else 'New password' }} — CivicGuard{% endblock %}
+{% block content %}
+<section class="single-card auth-card">
+    {% if invalid %}
+    <p class="kicker">This link is no longer available</p><h1>Request a new link.</h1>
+    <p>The link is invalid, expired, or already used. Your account is unchanged.</p>
+    <a class="button button-dark" href="{{ '/verify-email' if purpose == 'verify' else '/forgot-password' }}">{{ 'Request verification email' if purpose == 'verify' else 'Request reset link' }}</a>
+    {% else %}
+    <p class="kicker">{{ 'Your email, confirmed' if purpose == 'verify' else 'A fresh start' }}</p>
+    <h1>{{ 'Verify your email.' if purpose == 'verify' else 'Choose a new password.' }}</h1>
+    {% if purpose == 'verify' %}<p>Confirm that you requested this CivicGuard account. Verifying your email does not subscribe you to public emergency alerts.</p>{% endif %}
+    {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if purpose == 'reset' %}
+        <label for="password">New password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+        <p class="field-hint">12–128 characters. Your other sessions will be signed out.</p>
+        <label for="confirm_password">Confirm new password</label><input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+        {% endif %}
+        <button class="button button-orange" type="submit">{{ 'Verify email' if purpose == 'verify' else 'Reset password' }}</button>
+    </form>
+    {% endif %}
+</section>
+{% endblock %}

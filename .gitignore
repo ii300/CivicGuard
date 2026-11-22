@@ -5,12 +5,17 @@
 __pycache__/
 *.py[cod]
 *.db
+*.db-*
+*.sqlite*
+.env.bak
 node_modules/
 test-results/
 playwright-report/
 .playwright-cli/
 output/
 .DS_Store
+.Rhistory
+instance/
 dist/
 release/
 android/.gradle/

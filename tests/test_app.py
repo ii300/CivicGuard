@@ -25,9 +25,17 @@ class AppTests(unittest.TestCase):
         )
         self.app = create_app({
             "TESTING": True,
+            "APP_ENV": "development",
+            "SECRET_KEY": "backend-tests-only-not-for-production",
+            "SESSION_COOKIE_SECURE": False,
+            "TRUSTED_HOSTS": None,
+            "TRUST_PROXY": False,
             "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
             "ANTHROPIC_API_KEY": "test-key-not-real",
             "ANTHROPIC_MODEL": "test-model",
+            "WTF_CSRF_ENABLED": False,
+            "RATELIMIT_ENABLED": False,
+            "EMAIL_VERIFICATION_REQUIRED": False,
         })
         self.client = self.app.test_client()
         self.context = self.app.app_context()
@@ -35,6 +43,10 @@ class AppTests(unittest.TestCase):
         self.addCleanup(self.context.pop)
         self.addCleanup(db.engine.dispose)
         self.addCleanup(db.session.remove)
+        self.client.post("/register", data={
+            "name": "Test Operator", "email": "operator@example.com",
+            "password": "test-password-long", "confirm_password": "test-password-long",
+        })
 
     def post(self, **changes):
         payload = {"area": "Palisades", "severity": "high"}
@@ -123,6 +135,7 @@ class AppTests(unittest.TestCase):
         self.assertEqual(record.area, "洛杉矶")
         self.assertEqual(record.severity, "high")
         self.assertEqual(record.content, response.json["alert"])
+        self.assertIsNotNone(record.user_id)
         self.factory.assert_called_once_with(
             api_key="test-key-not-real", timeout=20.0, max_retries=0
         )
